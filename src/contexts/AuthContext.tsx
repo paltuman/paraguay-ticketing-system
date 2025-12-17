@@ -3,7 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-type AppRole = 'admin' | 'support_user' | 'supervisor';
+type AppRole = 'admin' | 'support_user' | 'supervisor' | 'superadmin';
 
 interface Profile {
   id: string;
@@ -21,9 +21,11 @@ interface AuthContextType {
   roles: AppRole[];
   isLoading: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   isSupervisor: boolean;
   isSupportUser: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithGoogle: () => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -171,6 +173,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error con Google',
+        description: error.message,
+      });
+      return { error };
+    }
+    return { error: null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -183,7 +204,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const isAdmin = roles.includes('admin');
+  const isSuperAdmin = roles.includes('superadmin');
+  const isAdmin = roles.includes('admin') || isSuperAdmin;
   const isSupervisor = roles.includes('supervisor');
   const isSupportUser = roles.includes('support_user');
 
@@ -195,9 +217,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       roles,
       isLoading,
       isAdmin,
+      isSuperAdmin,
       isSupervisor,
       isSupportUser,
       signIn,
+      signInWithGoogle,
       signUp,
       signOut,
     }}>
