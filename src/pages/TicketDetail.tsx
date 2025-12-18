@@ -26,11 +26,17 @@ import {
   AlertCircle,
   MessageSquare,
   History,
+  Paperclip,
+  Download,
+  FileText,
+  Image as ImageIcon,
+  X,
 } from 'lucide-react';
 import {
   TicketWithRelations,
   TicketMessage,
   TicketStatusHistory,
+  TicketAttachment,
   statusLabels,
   priorityLabels,
   TicketStatus,
@@ -39,25 +45,43 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+];
+
 export default function TicketDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, profile, isAdmin, isSupervisor } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [ticket, setTicket] = useState<TicketWithRelations | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [history, setHistory] = useState<TicketStatusHistory[]>([]);
+  const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (id) {
       fetchTicket();
       fetchMessages();
       fetchHistory();
+      fetchAttachments();
       subscribeToMessages();
     }
   }, [id]);
@@ -127,6 +151,18 @@ export default function TicketDetail() {
     }
   };
 
+  const fetchAttachments = async () => {
+    const { data, error } = await supabase
+      .from('ticket_attachments')
+      .select('*')
+      .eq('ticket_id', id)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setAttachments(data as TicketAttachment[]);
+    }
+  };
+
   const subscribeToMessages = () => {
     const channel = supabase
       .channel(`ticket-${id}`)
@@ -160,26 +196,86 @@ export default function TicketDetail() {
     };
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          variant: 'destructive',
+          title: 'Archivo muy grande',
+          description: `${file.name} excede el límite de 5MB`,
+        });
+        return false;
+      }
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        toast({
+          variant: 'destructive',
+          title: 'Tipo no permitido',
+          description: `${file.name} no es un tipo de archivo permitido`,
+        });
+        return false;
+      }
+      return true;
+    });
+    setSelectedFiles((prev) => [...prev, ...validFiles]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeSelectedFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !user) return;
+    if (!newMessage.trim() && selectedFiles.length === 0) return;
+    if (!user) return;
 
     setIsSending(true);
-    const { error } = await supabase.from('ticket_messages').insert({
-      ticket_id: id,
-      sender_id: user.id,
-      message: newMessage.trim(),
-      is_system_message: false,
-    });
 
-    if (error) {
+    // Create message first
+    const { data: messageData, error: msgError } = await supabase
+      .from('ticket_messages')
+      .insert({
+        ticket_id: id,
+        sender_id: user.id,
+        message: newMessage.trim() || 'Archivo adjunto',
+        is_system_message: false,
+      })
+      .select()
+      .single();
+
+    if (msgError) {
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'No se pudo enviar el mensaje',
       });
-    } else {
-      setNewMessage('');
+      setIsSending(false);
+      return;
     }
+
+    // Upload files
+    for (const file of selectedFiles) {
+      const filePath = `${id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('ticket-attachments')
+        .upload(filePath, file);
+
+      if (!uploadError) {
+        await supabase.from('ticket_attachments').insert({
+          ticket_id: id,
+          message_id: messageData.id,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          file_type: file.type,
+          uploaded_by: user.id,
+        });
+      }
+    }
+
+    setNewMessage('');
+    setSelectedFiles([]);
+    fetchAttachments();
     setIsSending(false);
   };
 
@@ -229,6 +325,28 @@ export default function TicketDetail() {
     fetchHistory();
   };
 
+  const downloadAttachment = async (attachment: TicketAttachment) => {
+    const { data, error } = await supabase.storage
+      .from('ticket-attachments')
+      .download(attachment.file_path);
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo descargar el archivo',
+      });
+      return;
+    }
+
+    const url = URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = attachment.file_name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {
       case 'open': return 'bg-status-open text-white';
@@ -256,6 +374,17 @@ export default function TicketDetail() {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
+    return <FileText className="h-4 w-4" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   if (isLoading) {
@@ -311,6 +440,45 @@ export default function TicketDetail() {
               <p className="text-foreground whitespace-pre-wrap">{ticket.description}</p>
             </CardContent>
           </Card>
+
+          {/* Attachments Card */}
+          {attachments.length > 0 && (
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Paperclip className="h-5 w-5 text-primary" />
+                  Archivos Adjuntos ({attachments.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {attachments.map((attachment) => (
+                    <div
+                      key={attachment.id}
+                      className="flex items-center gap-3 p-3 bg-muted rounded-lg"
+                    >
+                      <div className="h-10 w-10 flex items-center justify-center bg-background rounded">
+                        {getFileIcon(attachment.file_type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{attachment.file_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(attachment.file_size)}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => downloadAttachment(attachment)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Chat Section */}
           <Card className="border-0 shadow-md">
@@ -384,7 +552,46 @@ export default function TicketDetail() {
               {canChat && ticket.status !== 'closed' && (
                 <>
                   <Separator className="my-4" />
+                  
+                  {/* Selected files preview */}
+                  {selectedFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {selectedFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 bg-muted px-2 py-1 rounded text-sm"
+                        >
+                          {getFileIcon(file.type)}
+                          <span className="truncate max-w-[150px]">{file.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5"
+                            onClick={() => removeSelectedFile(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept={ALLOWED_FILE_TYPES.join(',')}
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
                     <Textarea
                       placeholder="Escribe tu mensaje..."
                       value={newMessage}
@@ -399,7 +606,7 @@ export default function TicketDetail() {
                     />
                     <Button
                       onClick={handleSendMessage}
-                      disabled={!newMessage.trim() || isSending}
+                      disabled={(!newMessage.trim() && selectedFiles.length === 0) || isSending}
                       className="self-end"
                     >
                       {isSending ? (
