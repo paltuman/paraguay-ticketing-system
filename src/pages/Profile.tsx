@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { User, Mail, Building, Briefcase, Save, Loader2 } from 'lucide-react';
-import { roleLabels } from '@/types/database';
+import { roleLabels, Department } from '@/types/database';
 
 export default function Profile() {
   const { profile, roles, user } = useAuth();
@@ -17,6 +24,31 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [position, setPosition] = useState(profile?.position || '');
+  const [departmentId, setDepartmentId] = useState(profile?.department_id || '');
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || '');
+      setPosition(profile.position || '');
+      setDepartmentId(profile.department_id || '');
+    }
+  }, [profile]);
+
+  const fetchDepartments = async () => {
+    const { data, error } = await supabase
+      .from('departments')
+      .select('*')
+      .order('name');
+
+    if (!error && data) {
+      setDepartments(data);
+    }
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -37,6 +69,7 @@ export default function Profile() {
       .update({
         full_name: fullName,
         position: position || null,
+        department_id: departmentId || null,
       })
       .eq('id', user.id);
 
@@ -54,6 +87,8 @@ export default function Profile() {
     }
     setIsLoading(false);
   };
+
+  const currentDepartment = departments.find(d => d.id === departmentId);
 
   return (
     <div className="space-y-6">
@@ -76,11 +111,14 @@ export default function Profile() {
                 </AvatarFallback>
               </Avatar>
               <h2 className="text-xl font-semibold">{profile?.full_name}</h2>
-              <p className="text-sm text-muted-foreground mb-3">{profile?.email}</p>
+              <p className="text-sm text-muted-foreground mb-2">{profile?.email}</p>
+              {currentDepartment && (
+                <p className="text-xs text-muted-foreground mb-3">{currentDepartment.name}</p>
+              )}
               <div className="flex flex-wrap gap-2 justify-center">
                 {roles.map((role) => (
                   <Badge key={role} variant="secondary">
-                    {roleLabels[role]}
+                    {roleLabels[role as keyof typeof roleLabels] || role}
                   </Badge>
                 ))}
               </div>
@@ -126,6 +164,23 @@ export default function Profile() {
                     className="pl-10"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="department">Departamento</Label>
+                <Select value={departmentId} onValueChange={setDepartmentId}>
+                  <SelectTrigger>
+                    <Building className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Selecciona tu departamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

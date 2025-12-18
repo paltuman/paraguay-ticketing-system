@@ -13,6 +13,7 @@ import TicketDetail from "./pages/TicketDetail";
 import Statistics from "./pages/Statistics";
 import Users from "./pages/Users";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,14 @@ const App = () => (
               element={
                 <AppLayout>
                   <Profile />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <AppLayout>
+                  <Settings />
                 </AppLayout>
               }
             />

@@ -25,8 +25,7 @@ interface AuthContextType {
   isSupervisor: boolean;
   isSupportUser: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, departmentId?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -139,16 +138,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, departmentId?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
+          department_id: departmentId || null,
         },
       },
     });
@@ -166,29 +166,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error };
     }
 
+    // Update department_id in profile if provided
+    if (data.user && departmentId) {
+      await supabase
+        .from('profiles')
+        .update({ department_id: departmentId })
+        .eq('id', data.user.id);
+    }
+
     toast({
       title: 'Registro exitoso',
       description: 'Tu cuenta ha sido creada. Ya puedes iniciar sesión.',
     });
-    return { error: null };
-  };
-
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error con Google',
-        description: error.message,
-      });
-      return { error };
-    }
     return { error: null };
   };
 
@@ -221,7 +210,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isSupervisor,
       isSupportUser,
       signIn,
-      signInWithGoogle,
       signUp,
       signOut,
     }}>

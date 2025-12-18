@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -15,8 +16,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2, Send, AlertTriangle } from 'lucide-react';
-import { Department, TicketPriority, priorityLabels } from '@/types/database';
+import { ArrowLeft, Loader2, Send, AlertTriangle, Paperclip, X, Lightbulb, FileText, Image as ImageIcon } from 'lucide-react';
+import { Department, TicketPriority, priorityLabels, CommonIssue } from '@/types/database';
 import { z } from 'zod';
 
 const ticketSchema = z.object({
@@ -26,12 +27,33 @@ const ticketSchema = z.object({
   priority: z.enum(['low', 'medium', 'high', 'urgent']),
 });
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+];
+
+interface FileWithPreview {
+  file: File;
+  preview?: string;
+}
+
 export default function CreateTicket() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [commonIssues, setCommonIssues] = useState<CommonIssue[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -39,10 +61,18 @@ export default function CreateTicket() {
   const [description, setDescription] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [priority, setPriority] = useState<TicketPriority>('medium');
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDepartments();
+    fetchCommonIssues();
   }, []);
+
+  useEffect(() => {
+    // Filter common issues when department changes
+    fetchCommonIssues();
+  }, [departmentId]);
 
   const fetchDepartments = async () => {
     const { data, error } = await supabase
@@ -53,6 +83,100 @@ export default function CreateTicket() {
     if (!error && data) {
       setDepartments(data);
     }
+  };
+
+  const fetchCommonIssues = async () => {
+    let query = supabase
+      .from('common_issues')
+      .select('*')
+      .eq('is_active', true)
+      .order('usage_count', { ascending: false })
+      .limit(10);
+
+    if (departmentId) {
+      query = query.or(`department_id.eq.${departmentId},department_id.is.null`);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      setCommonIssues(data);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    
+    const validFiles: FileWithPreview[] = [];
+    
+    for (const file of selectedFiles) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          variant: 'destructive',
+          title: 'Archivo muy grande',
+          description: `${file.name} excede el límite de 5MB`,
+        });
+        continue;
+      }
+      
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        toast({
+          variant: 'destructive',
+          title: 'Tipo de archivo no permitido',
+          description: `${file.name} no es un tipo de archivo permitido`,
+        });
+        continue;
+      }
+      
+      const fileWithPreview: FileWithPreview = { file };
+      if (file.type.startsWith('image/')) {
+        fileWithPreview.preview = URL.createObjectURL(file);
+      }
+      validFiles.push(fileWithPreview);
+    }
+    
+    setFiles((prev) => [...prev, ...validFiles]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => {
+      const newFiles = [...prev];
+      if (newFiles[index].preview) {
+        URL.revokeObjectURL(newFiles[index].preview!);
+      }
+      newFiles.splice(index, 1);
+      return newFiles;
+    });
+  };
+
+  const selectCommonIssue = async (issue: CommonIssue) => {
+    setSelectedIssueId(issue.id);
+    setTitle(issue.title);
+    if (issue.description) {
+      setDescription(issue.description);
+    }
+
+    // Increment usage count
+    await supabase
+      .from('common_issues')
+      .update({ usage_count: issue.usage_count + 1 })
+      .eq('id', issue.id);
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) {
+      return <ImageIcon className="h-4 w-4" />;
+    }
+    return <FileText className="h-4 w-4" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,6 +228,27 @@ export default function CreateTicket() {
       return;
     }
 
+    // Upload files
+    for (const fileWithPreview of files) {
+      const file = fileWithPreview.file;
+      const filePath = `${data.id}/${Date.now()}-${file.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('ticket-attachments')
+        .upload(filePath, file);
+
+      if (!uploadError) {
+        await supabase.from('ticket_attachments').insert({
+          ticket_id: data.id,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          file_type: file.type,
+          uploaded_by: user?.id,
+        });
+      }
+    }
+
     // Add initial message to ticket
     await supabase.from('ticket_messages').insert({
       ticket_id: data.id,
@@ -149,6 +294,35 @@ export default function CreateTicket() {
           </p>
         </div>
       </div>
+
+      {/* Common Issues Suggestions */}
+      {commonIssues.length > 0 && (
+        <Card className="border-0 shadow-md bg-muted/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-yellow-500" />
+              Problemas Frecuentes
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Selecciona si tu problema coincide con alguno de estos
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {commonIssues.map((issue) => (
+                <Badge
+                  key={issue.id}
+                  variant={selectedIssueId === issue.id ? 'default' : 'outline'}
+                  className="cursor-pointer hover:bg-primary/10"
+                  onClick={() => selectCommonIssue(issue)}
+                >
+                  {issue.title}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-0 shadow-lg">
         <CardHeader>
@@ -239,6 +413,75 @@ export default function CreateTicket() {
               <p className="text-xs text-muted-foreground">
                 {description.length}/2000 caracteres
               </p>
+            </div>
+
+            {/* File Attachments */}
+            <div className="space-y-2">
+              <Label>Archivos Adjuntos (opcional)</Label>
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={ALLOWED_FILE_TYPES.join(',')}
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <div className="text-center">
+                  <Paperclip className="mx-auto h-8 w-8 text-muted-foreground/50" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="mt-2"
+                  >
+                    Seleccionar archivos
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Imágenes, PDF, documentos Word/Excel. Máximo 5MB por archivo.
+                  </p>
+                </div>
+              </div>
+
+              {/* File List */}
+              {files.length > 0 && (
+                <div className="space-y-2 mt-3">
+                  {files.map((fileWithPreview, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-2 bg-muted rounded-lg"
+                    >
+                      {fileWithPreview.preview ? (
+                        <img
+                          src={fileWithPreview.preview}
+                          alt={fileWithPreview.file.name}
+                          className="h-10 w-10 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 flex items-center justify-center bg-background rounded">
+                          {getFileIcon(fileWithPreview.file.type)}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {fileWithPreview.file.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(fileWithPreview.file.size)}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Submit */}

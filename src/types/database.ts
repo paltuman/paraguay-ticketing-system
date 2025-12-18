@@ -1,4 +1,4 @@
-export type AppRole = 'admin' | 'support_user' | 'supervisor';
+export type AppRole = 'admin' | 'support_user' | 'supervisor' | 'superadmin';
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
 
@@ -70,6 +70,31 @@ export interface TicketStatusHistory {
   changer?: Profile | null;
 }
 
+export interface TicketAttachment {
+  id: string;
+  ticket_id: string;
+  message_id: string | null;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  file_type: string;
+  uploaded_by: string | null;
+  created_at: string;
+}
+
+export interface CommonIssue {
+  id: string;
+  title: string;
+  description: string | null;
+  department_id: string | null;
+  keywords: string[];
+  usage_count: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  department?: Department | null;
+}
+
 export const statusLabels: Record<TicketStatus, string> = {
   open: 'Abierto',
   in_progress: 'En Proceso',
@@ -88,4 +113,5 @@ export const roleLabels: Record<AppRole, string> = {
   admin: 'Administrador',
   support_user: 'Usuario de Soporte',
   supervisor: 'Supervisor',
+  superadmin: 'Super Administrador',
 };

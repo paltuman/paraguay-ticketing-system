@@ -32,8 +32,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Building2,
+  Lightbulb,
 } from 'lucide-react';
-import { Department, TicketStatus, statusLabels } from '@/types/database';
+import { Department, TicketStatus, statusLabels, CommonIssue } from '@/types/database';
 import { Navigate } from 'react-router-dom';
 
 interface TicketStats {
@@ -57,6 +58,7 @@ export default function Statistics() {
   const { isAdmin, isSupervisor } = useAuth();
   const [stats, setStats] = useState<TicketStats | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [commonIssues, setCommonIssues] = useState<CommonIssue[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -68,12 +70,26 @@ export default function Statistics() {
   useEffect(() => {
     fetchDepartments();
     fetchStats();
+    fetchCommonIssues();
   }, [selectedDepartment]);
 
   const fetchDepartments = async () => {
     const { data, error } = await supabase.from('departments').select('*').order('name');
     if (!error && data) {
       setDepartments(data);
+    }
+  };
+
+  const fetchCommonIssues = async () => {
+    const { data, error } = await supabase
+      .from('common_issues')
+      .select('*, department:departments(id, name)')
+      .eq('is_active', true)
+      .order('usage_count', { ascending: false })
+      .limit(10);
+
+    if (!error && data) {
+      setCommonIssues(data as unknown as CommonIssue[]);
     }
   };
 
@@ -382,6 +398,59 @@ export default function Statistics() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Common Issues Stats */}
+      {commonIssues.length > 0 && (
+        <Card className="border-0 shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-yellow-500" />
+              Problemas Más Frecuentes
+            </CardTitle>
+            <CardDescription>
+              Top 10 problemas comunes más utilizados por los usuarios
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={commonIssues.map((issue) => ({
+                    name: issue.title.length > 30 ? issue.title.slice(0, 30) + '...' : issue.title,
+                    usos: issue.usage_count,
+                    department: issue.department?.name || 'Todos',
+                  }))}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" />
+                  <YAxis type="category" dataKey="name" width={200} tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-background border rounded-lg p-3 shadow-lg">
+                            <p className="font-medium">{data.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Departamento: {data.department}
+                            </p>
+                            <p className="text-sm font-medium text-primary">
+                              {data.usos} usos
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="usos" fill="#eab308" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Resolution Rate */}
       <Card className="border-0 shadow-md">
