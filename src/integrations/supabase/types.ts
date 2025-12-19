@@ -79,6 +79,47 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          ticket_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          ticket_id?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          ticket_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -178,7 +219,9 @@ export type Database = {
           is_system_message: boolean | null
           message: string
           sender_id: string | null
+          status: string | null
           ticket_id: string
+          voice_note_url: string | null
         }
         Insert: {
           created_at?: string
@@ -186,7 +229,9 @@ export type Database = {
           is_system_message?: boolean | null
           message: string
           sender_id?: string | null
+          status?: string | null
           ticket_id: string
+          voice_note_url?: string | null
         }
         Update: {
           created_at?: string
@@ -194,7 +239,9 @@ export type Database = {
           is_system_message?: boolean | null
           message?: string
           sender_id?: string | null
+          status?: string | null
           ticket_id?: string
+          voice_note_url?: string | null
         }
         Relationships: [
           {
@@ -251,6 +298,35 @@ export type Database = {
           },
           {
             foreignKeyName: "ticket_status_history_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_viewers: {
+        Row: {
+          id: string
+          last_seen: string
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_seen?: string
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_seen?: string
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_viewers_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "tickets"

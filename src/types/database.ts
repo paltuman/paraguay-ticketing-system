@@ -55,6 +55,8 @@ export interface TicketMessage {
   sender_id: string | null;
   message: string;
   is_system_message: boolean;
+  status?: 'sent' | 'delivered' | 'read';
+  voice_note_url?: string | null;
   created_at: string;
   sender?: Profile | null;
 }
