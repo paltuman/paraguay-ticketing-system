@@ -22,12 +22,24 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   PlusCircle,
   Search,
   Filter,
   ArrowRight,
   Loader2,
   Ticket as TicketIcon,
+  Trash2,
 } from 'lucide-react';
 import {
   TicketWithRelations,
@@ -39,12 +51,15 @@ import {
 } from '@/types/database';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Tickets() {
   const { isAdmin, isSupervisor } = useAuth();
+  const { toast } = useToast();
   const [tickets, setTickets] = useState<TicketWithRelations[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,6 +99,32 @@ export default function Tickets() {
     if (!error && data) {
       setDepartments(data);
     }
+  };
+
+  const handleDeleteTicket = async (ticketId: string) => {
+    setDeletingId(ticketId);
+    
+    // Delete related records first
+    await supabase.from('ticket_attachments').delete().eq('ticket_id', ticketId);
+    await supabase.from('ticket_messages').delete().eq('ticket_id', ticketId);
+    await supabase.from('ticket_status_history').delete().eq('ticket_id', ticketId);
+    
+    const { error } = await supabase.from('tickets').delete().eq('id', ticketId);
+    
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo eliminar el ticket: ' + error.message,
+      });
+    } else {
+      toast({
+        title: 'Ticket eliminado',
+        description: 'El ticket ha sido eliminado correctamente.',
+      });
+      setTickets(tickets.filter((t) => t.id !== ticketId));
+    }
+    setDeletingId(null);
   };
 
   const filteredTickets = tickets.filter((ticket) => {
@@ -244,7 +285,7 @@ export default function Tickets() {
                   <TableHead>Prioridad</TableHead>
                   <TableHead>Departamento</TableHead>
                   <TableHead>Fecha</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead className={isAdmin ? 'w-[100px]' : 'w-[50px]'}></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -281,11 +322,48 @@ export default function Tickets() {
                       {format(new Date(ticket.created_at), 'dd MMM yyyy', { locale: es })}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link to={`/tickets/${ticket.id}`}>
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link to={`/tickets/${ticket.id}`}>
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        {isAdmin && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive"
+                                disabled={deletingId === ticket.id}
+                              >
+                                {deletingId === ticket.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar ticket #{ticket.ticket_number}?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta acción no se puede deshacer. Se eliminarán todos los mensajes y archivos adjuntos asociados.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteTicket(ticket.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
