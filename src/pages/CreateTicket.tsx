@@ -47,7 +47,7 @@ interface FileWithPreview {
 }
 
 export default function CreateTicket() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +59,7 @@ export default function CreateTicket() {
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [departmentId, setDepartmentId] = useState('');
+  const [departmentId, setDepartmentId] = useState(profile?.department_id || '');
   const [priority, setPriority] = useState<TicketPriority>('medium');
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
@@ -67,7 +67,11 @@ export default function CreateTicket() {
   useEffect(() => {
     fetchDepartments();
     fetchCommonIssues();
-  }, []);
+    // Pre-select user's department
+    if (profile?.department_id) {
+      setDepartmentId(profile.department_id);
+    }
+  }, [profile]);
 
   useEffect(() => {
     // Filter common issues when department changes

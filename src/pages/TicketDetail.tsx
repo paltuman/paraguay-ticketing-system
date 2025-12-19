@@ -31,6 +31,7 @@ import {
   FileText,
   Image as ImageIcon,
   X,
+  Users,
 } from 'lucide-react';
 import {
   TicketWithRelations,
@@ -44,6 +45,9 @@ import {
 } from '@/types/database';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { VoiceRecorder } from '@/components/chat/VoiceRecorder';
+import { VoicePlayer } from '@/components/chat/VoicePlayer';
+import { MessageStatus } from '@/components/chat/MessageStatus';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = [
@@ -59,6 +63,16 @@ const ALLOWED_FILE_TYPES = [
   'text/plain',
 ];
 
+interface TicketViewer {
+  id: string;
+  user_id: string;
+  last_seen: string;
+  profile?: {
+    full_name: string;
+    avatar_url: string | null;
+  };
+}
+
 export default function TicketDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, profile, isAdmin, isSupervisor } = useAuth();
@@ -71,6 +85,7 @@ export default function TicketDetail() {
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [history, setHistory] = useState<TicketStatusHistory[]>([]);
   const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
+  const [viewers, setViewers] = useState<TicketViewer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -83,12 +98,130 @@ export default function TicketDetail() {
       fetchHistory();
       fetchAttachments();
       subscribeToMessages();
+      trackPresence();
+      fetchViewers();
+      subscribeToViewers();
     }
+
+    return () => {
+      // Clean up presence when leaving
+      if (id && user) {
+        supabase
+          .from('ticket_viewers')
+          .delete()
+          .eq('ticket_id', id)
+          .eq('user_id', user.id);
+      }
+    };
   }, [id]);
 
   useEffect(() => {
     scrollToBottom();
+    // Mark messages as read when viewing
+    markMessagesAsRead();
   }, [messages]);
+
+  const trackPresence = async () => {
+    if (!user || !id) return;
+
+    // Update or insert viewer record
+    await supabase
+      .from('ticket_viewers')
+      .upsert({
+        ticket_id: id,
+        user_id: user.id,
+        last_seen: new Date().toISOString(),
+      }, {
+        onConflict: 'ticket_id,user_id'
+      });
+
+    // Update presence every 30 seconds
+    const interval = setInterval(async () => {
+      await supabase
+        .from('ticket_viewers')
+        .upsert({
+          ticket_id: id,
+          user_id: user.id,
+          last_seen: new Date().toISOString(),
+        }, {
+          onConflict: 'ticket_id,user_id'
+        });
+    }, 30000);
+
+    return () => clearInterval(interval);
+  };
+
+  const fetchViewers = async () => {
+    if (!id) return;
+
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+    const { data, error } = await supabase
+      .from('ticket_viewers')
+      .select('id, user_id, last_seen')
+      .eq('ticket_id', id)
+      .gte('last_seen', fiveMinutesAgo);
+
+    if (!error && data) {
+      // Fetch profiles for viewers
+      const userIds = data.map(v => v.user_id).filter(uid => uid !== user?.id);
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+
+        const viewersWithProfiles = data
+          .filter(v => v.user_id !== user?.id)
+          .map(v => ({
+            ...v,
+            profile: profiles?.find(p => p.id === v.user_id)
+          }));
+
+        setViewers(viewersWithProfiles as TicketViewer[]);
+      } else {
+        setViewers([]);
+      }
+    }
+  };
+
+  const subscribeToViewers = () => {
+    const channel = supabase
+      .channel(`viewers-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ticket_viewers',
+          filter: `ticket_id=eq.${id}`,
+        },
+        () => {
+          fetchViewers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const markMessagesAsRead = async () => {
+    if (!user || !id) return;
+
+    // Update messages from others as read
+    const unreadMessages = messages.filter(
+      m => m.sender_id !== user.id && m.status !== 'read' && !m.is_system_message
+    );
+
+    if (unreadMessages.length > 0) {
+      await supabase
+        .from('ticket_messages')
+        .update({ status: 'read' })
+        .in('id', unreadMessages.map(m => m.id));
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -169,23 +302,29 @@ export default function TicketDetail() {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'ticket_messages',
           filter: `ticket_id=eq.${id}`,
         },
         async (payload) => {
-          const { data } = await supabase
-            .from('ticket_messages')
-            .select(`
-              *,
-              sender:profiles!ticket_messages_sender_id_fkey(id, full_name, email, avatar_url)
-            `)
-            .eq('id', payload.new.id)
-            .single();
+          if (payload.eventType === 'INSERT') {
+            const { data } = await supabase
+              .from('ticket_messages')
+              .select(`
+                *,
+                sender:profiles!ticket_messages_sender_id_fkey(id, full_name, email, avatar_url)
+              `)
+              .eq('id', payload.new.id)
+              .single();
 
-          if (data) {
-            setMessages((prev) => [...prev, data as unknown as TicketMessage]);
+            if (data) {
+              setMessages((prev) => [...prev, data as unknown as TicketMessage]);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            setMessages(prev => 
+              prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m)
+            );
           }
         }
       )
@@ -225,6 +364,62 @@ export default function TicketDetail() {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleVoiceRecordingComplete = async (blob: Blob) => {
+    if (!user || !id) return;
+
+    setIsSending(true);
+
+    try {
+      // Upload voice note
+      const fileName = `${id}/${Date.now()}-voice.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from('voice-notes')
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      // Create message with voice note
+      await supabase
+        .from('ticket_messages')
+        .insert({
+          ticket_id: id,
+          sender_id: user.id,
+          message: '🎤 Nota de voz',
+          is_system_message: false,
+          voice_note_url: fileName,
+          status: 'sent',
+        });
+
+      // Send notification to other party
+      await sendNotification('Nuevo mensaje de voz');
+    } catch (error) {
+      console.error('Error sending voice note:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo enviar la nota de voz',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const sendNotification = async (message: string) => {
+    if (!ticket) return;
+
+    // Determine recipient
+    const recipientId = isAdmin ? ticket.created_by : ticket.assigned_to;
+    if (!recipientId || recipientId === user?.id) return;
+
+    await supabase.from('notifications').insert({
+      user_id: recipientId,
+      title: `Ticket #${ticket.ticket_number}`,
+      message,
+      type: 'info',
+      ticket_id: ticket.id,
+    });
+  };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() && selectedFiles.length === 0) return;
     if (!user) return;
@@ -239,6 +434,7 @@ export default function TicketDetail() {
         sender_id: user.id,
         message: newMessage.trim() || 'Archivo adjunto',
         is_system_message: false,
+        status: 'sent',
       })
       .select()
       .single();
@@ -272,6 +468,9 @@ export default function TicketDetail() {
         });
       }
     }
+
+    // Send notification
+    await sendNotification(newMessage.trim() || 'Nuevo archivo adjunto');
 
     setNewMessage('');
     setSelectedFiles([]);
@@ -315,6 +514,17 @@ export default function TicketDetail() {
       message: `Estado cambiado de "${statusLabels[ticket.status]}" a "${statusLabels[newStatus]}"`,
       is_system_message: true,
     });
+
+    // Send notification
+    if (ticket.created_by && ticket.created_by !== user.id) {
+      await supabase.from('notifications').insert({
+        user_id: ticket.created_by,
+        title: `Ticket #${ticket.ticket_number} actualizado`,
+        message: `El estado cambió a "${statusLabels[newStatus]}"`,
+        type: newStatus === 'resolved' ? 'success' : 'info',
+        ticket_id: ticket.id,
+      });
+    }
 
     toast({
       title: 'Estado actualizado',
@@ -420,6 +630,23 @@ export default function TicketDetail() {
             <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
               {priorityLabels[ticket.priority]}
             </Badge>
+            {/* Active viewers indicator */}
+            {viewers.length > 0 && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Users className="h-3 w-3" />
+                <span>{viewers.length} viendo</span>
+                <div className="flex -space-x-1">
+                  {viewers.slice(0, 3).map((viewer) => (
+                    <Avatar key={viewer.id} className="h-5 w-5 border border-background">
+                      <AvatarImage src={viewer.profile?.avatar_url || undefined} />
+                      <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
+                        {viewer.profile?.full_name ? getInitials(viewer.profile.full_name) : 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <h1 className="mt-2 text-2xl font-bold text-foreground">{ticket.title}</h1>
         </div>
@@ -536,10 +763,19 @@ export default function TicketDetail() {
                           <p className="text-xs font-medium mb-1 opacity-80">
                             {msg.sender?.full_name || 'Usuario'}
                           </p>
-                          <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                          <p className="text-[10px] opacity-60 mt-1 text-right">
-                            {format(new Date(msg.created_at), 'HH:mm', { locale: es })}
-                          </p>
+                          {msg.voice_note_url ? (
+                            <VoicePlayer voiceNoteUrl={msg.voice_note_url} />
+                          ) : (
+                            <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                          )}
+                          <div className="flex items-center justify-end gap-1 mt-1">
+                            <span className="text-[10px] opacity-60">
+                              {format(new Date(msg.created_at), 'HH:mm', { locale: es })}
+                            </span>
+                            {isOwnMessage && msg.status && (
+                              <MessageStatus status={msg.status as 'sent' | 'delivered' | 'read'} />
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -592,6 +828,10 @@ export default function TicketDetail() {
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>
+                    <VoiceRecorder 
+                      onRecordingComplete={handleVoiceRecordingComplete}
+                      disabled={isSending}
+                    />
                     <Textarea
                       placeholder="Escribe tu mensaje..."
                       value={newMessage}

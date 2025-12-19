@@ -38,6 +38,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             {children}
           </div>
         </main>
+        <footer className="border-t border-border bg-card px-4 py-3 text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Subsistema de Información - PAI Paraguay. Todos los derechos reservados.
+        </footer>
       </div>
     </div>
   );
