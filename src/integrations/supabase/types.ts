@@ -161,6 +161,41 @@ export type Database = {
           },
         ]
       }
+      satisfaction_surveys: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          ticket_id: string | null
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          ticket_id?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          ticket_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_surveys_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_attachments: {
         Row: {
           created_at: string
@@ -252,6 +287,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ticket_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "user_performance_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "ticket_messages_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: false
@@ -295,6 +337,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "user_performance_stats"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "ticket_status_history_ticket_id_fkey"
@@ -389,11 +438,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "user_performance_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "tickets_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_performance_stats"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "tickets_department_id_fkey"
@@ -427,7 +490,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_performance_stats: {
+        Row: {
+          avatar_url: string | null
+          avg_rating: number | null
+          department_id: string | null
+          full_name: string | null
+          resolved_tickets: number | null
+          total_surveys: number | null
+          total_tickets: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
