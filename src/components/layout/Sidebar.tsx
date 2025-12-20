@@ -88,13 +88,12 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         <Link to="/dashboard" className="flex items-center gap-3">
           <img
             src={logo}
-            alt="PAI Paraguay"
+            alt="Logo"
             className={cn('h-10 w-10 rounded-full bg-white p-0.5 transition-all', isOpen ? '' : 'h-12 w-12')}
           />
           {isOpen && (
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-sidebar-foreground">PAI Paraguay</span>
-              <span className="text-xs text-sidebar-foreground/60">Sistema de Tickets</span>
+              <span className="text-sm font-semibold text-sidebar-foreground">Sistema de Tickets</span>
             </div>
           )}
         </Link>

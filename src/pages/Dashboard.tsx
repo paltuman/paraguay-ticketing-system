@@ -16,6 +16,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { TicketWithRelations, statusLabels, priorityLabels, TicketStatus } from '@/types/database';
+import { TopPerformers } from '@/components/dashboard/TopPerformers';
 
 interface Stats {
   total: number;
@@ -124,19 +125,19 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Welcome Section */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
             Bienvenido, {profile?.full_name?.split(' ')[0] || 'Usuario'}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {isAdmin ? 'Panel de Administración' : isSupervisor ? 'Panel de Supervisión' : 'Panel de Soporte'}
           </p>
         </div>
         {!isSupervisor && (
-          <Button asChild className="w-fit">
+          <Button asChild className="w-full sm:w-fit">
             <Link to="/tickets/new">
               <PlusCircle className="mr-2 h-4 w-4" />
               Crear Ticket
@@ -146,16 +147,16 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
           <Card key={stat.title} className="animate-slide-up border-0 shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className={`rounded-lg p-3 ${stat.bgColor}`}>
-                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+            <CardContent className="flex items-center gap-3 sm:gap-4 p-3 sm:p-6">
+              <div className={`rounded-lg p-2 sm:p-3 ${stat.bgColor}`}>
+                <stat.icon className={`h-4 w-4 sm:h-6 sm:w-6 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">{stat.title}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{stat.title}</p>
+                <p className="text-lg sm:text-2xl font-bold">{stat.value}</p>
               </div>
             </CardContent>
           </Card>
@@ -163,27 +164,27 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions & Recent Tickets */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Recent Tickets */}
         <Card className="lg:col-span-2 border-0 shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 sm:pb-6">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Tickets Recientes
               </CardTitle>
-              <CardDescription>Últimos tickets del sistema</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Últimos tickets del sistema</CardDescription>
             </div>
-            <Button variant="ghost" asChild>
+            <Button variant="ghost" asChild size="sm">
               <Link to="/tickets" className="text-primary">
                 Ver todos <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="px-3 sm:px-6">
+            <div className="space-y-2 sm:space-y-3">
               {recentTickets.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
+                <p className="text-center text-muted-foreground py-8 text-sm">
                   No hay tickets aún. ¡Crea el primero!
                 </p>
               ) : (
@@ -191,23 +192,23 @@ export default function Dashboard() {
                   <Link
                     key={ticket.id}
                     to={`/tickets/${ticket.id}`}
-                    className="flex items-center justify-between rounded-lg border border-border p-4 transition-all hover:bg-accent hover:shadow-sm"
+                    className="flex items-center justify-between rounded-lg border border-border p-3 sm:p-4 transition-all hover:bg-accent hover:shadow-sm"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                        <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">
                           #{ticket.ticket_number}
                         </span>
-                        <Badge className={getStatusColor(ticket.status)} variant="secondary">
+                        <Badge className={`${getStatusColor(ticket.status)} text-[10px] sm:text-xs`} variant="secondary">
                           {statusLabels[ticket.status]}
                         </Badge>
                       </div>
-                      <p className="mt-1 font-medium truncate">{ticket.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="mt-1 text-sm sm:text-base font-medium truncate">{ticket.title}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {ticket.department?.name || 'Sin departamento'}
                       </p>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" />
                   </Link>
                 ))
               )}
@@ -215,52 +216,64 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Quick Stats for Supervisors/Admins */}
-        <Card className="border-0 shadow-md">
-          <CardHeader>
-            <CardTitle>Resumen Rápido</CardTitle>
-            <CardDescription>Estado general del sistema</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Tasa de Resolución</span>
-                <span className="font-semibold text-status-resolved">
-                  {stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 0}%
-                </span>
+        {/* Quick Stats & Top Performers */}
+        <div className="space-y-4 sm:space-y-6">
+          <Card className="border-0 shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">Resumen Rápido</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Estado general del sistema</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm text-muted-foreground">Tasa de Resolución</span>
+                  <span className="font-semibold text-status-resolved">
+                    {stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-status-resolved transition-all duration-500"
+                    style={{ width: `${stats.total > 0 ? (stats.resolved / stats.total) * 100 : 0}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full bg-status-resolved transition-all duration-500"
-                  style={{ width: `${stats.total > 0 ? (stats.resolved / stats.total) * 100 : 0}%` }}
-                />
-              </div>
-            </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Tickets Activos</span>
-                <span className="font-semibold text-status-in-progress">
-                  {stats.open + stats.inProgress}
-                </span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs sm:text-sm text-muted-foreground">Tickets Activos</span>
+                  <span className="font-semibold text-status-in-progress">
+                    {stats.open + stats.inProgress}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-status-in-progress transition-all duration-500"
+                    style={{ width: `${stats.total > 0 ? ((stats.open + stats.inProgress) / stats.total) * 100 : 0}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full bg-status-in-progress transition-all duration-500"
-                  style={{ width: `${stats.total > 0 ? ((stats.open + stats.inProgress) / stats.total) * 100 : 0}%` }}
-                />
-              </div>
-            </div>
 
-            {(isAdmin || isSupervisor) && (
-              <Button variant="outline" className="w-full mt-4" asChild>
-                <Link to="/statistics">
-                  Ver Estadísticas Completas
-                </Link>
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+              {(isAdmin || isSupervisor) && (
+                <Button variant="outline" className="w-full mt-4" asChild size="sm">
+                  <Link to="/statistics">
+                    Ver Estadísticas Completas
+                  </Link>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Top Performers */}
+          <TopPerformers />
+        </div>
+      </div>
+
+      {/* Copyright */}
+      <div className="pt-4 text-center">
+        <p className="text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Subsistema de Información. Todos los derechos reservados.
+        </p>
       </div>
     </div>
   );
