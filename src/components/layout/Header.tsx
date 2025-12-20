@@ -18,8 +18,6 @@ import { roleLabels } from '@/types/database';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import logoPai from '@/assets/logo-pai.png';
-
 interface Notification {
   id: string;
   title: string;
@@ -119,17 +117,14 @@ export function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 shadow-sm">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onMenuClick}
-          className="lg:hidden"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-        <img src={logoPai} alt="PAI" className="h-10 w-auto" />
-      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onMenuClick}
+        className="lg:hidden"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
 
       <div className="flex items-center gap-4">
         {/* Notifications */}

@@ -48,6 +48,8 @@ import { es } from 'date-fns/locale';
 import { VoiceRecorder } from '@/components/chat/VoiceRecorder';
 import { VoicePlayer } from '@/components/chat/VoicePlayer';
 import { MessageStatus } from '@/components/chat/MessageStatus';
+import { SatisfactionSurvey } from '@/components/chat/SatisfactionSurvey';
+import { OnlineUsers } from '@/components/chat/OnlineUsers';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = [
@@ -90,7 +92,8 @@ export default function TicketDetail() {
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [hasSurvey, setHasSurvey] = useState(false);
   useEffect(() => {
     if (id) {
       fetchTicket();
@@ -101,6 +104,7 @@ export default function TicketDetail() {
       trackPresence();
       fetchViewers();
       subscribeToViewers();
+      checkExistingSurvey();
     }
 
     return () => {
@@ -117,9 +121,30 @@ export default function TicketDetail() {
 
   useEffect(() => {
     scrollToBottom();
-    // Mark messages as read when viewing
     markMessagesAsRead();
   }, [messages]);
+
+  // Check if ticket is resolved and show survey
+  useEffect(() => {
+    if (ticket?.status === 'resolved' && ticket.created_by === user?.id && !hasSurvey) {
+      setShowSurvey(true);
+    }
+  }, [ticket?.status, hasSurvey]);
+
+  const checkExistingSurvey = async () => {
+    if (!id || !user) return;
+
+    const { data } = await supabase
+      .from('satisfaction_surveys')
+      .select('id')
+      .eq('ticket_id', id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (data) {
+      setHasSurvey(true);
+    }
+  };
 
   const trackPresence = async () => {
     if (!user || !id) return;
@@ -613,58 +638,57 @@ export default function TicketDetail() {
   const canChangeStatus = isAdmin;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-start gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/tickets')}>
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/tickets')} className="self-start">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="font-mono text-sm text-muted-foreground">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="font-mono text-xs sm:text-sm text-muted-foreground">
               #{ticket.ticket_number}
             </span>
-            <Badge className={getStatusColor(ticket.status)}>
+            <Badge className={`${getStatusColor(ticket.status)} text-xs`}>
               {statusLabels[ticket.status]}
             </Badge>
-            <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
+            <Badge variant="outline" className={`${getPriorityColor(ticket.priority)} text-xs`}>
               {priorityLabels[ticket.priority]}
             </Badge>
-            {/* Active viewers indicator */}
-            {viewers.length > 0 && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Users className="h-3 w-3" />
-                <span>{viewers.length} viendo</span>
-                <div className="flex -space-x-1">
-                  {viewers.slice(0, 3).map((viewer) => (
-                    <Avatar key={viewer.id} className="h-5 w-5 border border-background">
-                      <AvatarImage src={viewer.profile?.avatar_url || undefined} />
-                      <AvatarFallback className="text-[8px] bg-primary text-primary-foreground">
-                        {viewer.profile?.full_name ? getInitials(viewer.profile.full_name) : 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-          <h1 className="mt-2 text-2xl font-bold text-foreground">{ticket.title}</h1>
+          <h1 className="mt-2 text-lg sm:text-xl md:text-2xl font-bold text-foreground line-clamp-2">{ticket.title}</h1>
+          
+          {/* Online users */}
+          <div className="mt-2">
+            <OnlineUsers viewers={viewers} />
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Satisfaction Survey Modal */}
+      {showSurvey && (
+        <SatisfactionSurvey 
+          ticketId={ticket.id} 
+          onComplete={() => {
+            setShowSurvey(false);
+            setHasSurvey(true);
+          }} 
+        />
+      )}
+
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Main Content - Chat */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Description Card */}
           <Card className="border-0 shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Descripción del Problema
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-foreground whitespace-pre-wrap">{ticket.description}</p>
+              <p className="text-sm sm:text-base text-foreground whitespace-pre-wrap">{ticket.description}</p>
             </CardContent>
           </Card>
 
@@ -709,22 +733,22 @@ export default function TicketDetail() {
 
           {/* Chat Section */}
           <Card className="border-0 shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Conversación
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 {canChat
                   ? 'Comunícate con el equipo de soporte'
                   : 'Historial de la conversación'}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-3 sm:px-6">
               {/* Messages */}
-              <div className="h-[400px] overflow-y-auto space-y-4 pr-2 scrollbar-thin">
+              <div className="h-[300px] sm:h-[400px] overflow-y-auto space-y-3 sm:space-y-4 pr-2 scrollbar-thin">
                 {messages.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
+                  <p className="text-center text-muted-foreground py-8 text-sm">
                     No hay mensajes aún
                   </p>
                 ) : (
@@ -735,7 +759,7 @@ export default function TicketDetail() {
                     if (isSystem) {
                       return (
                         <div key={msg.id} className="flex justify-center">
-                          <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                          <span className="text-[10px] sm:text-xs text-muted-foreground bg-muted px-2 sm:px-3 py-1 rounded-full text-center">
                             {msg.message}
                           </span>
                         </div>
@@ -745,31 +769,31 @@ export default function TicketDetail() {
                     return (
                       <div
                         key={msg.id}
-                        className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
+                        className={`flex gap-2 sm:gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
                       >
-                        <Avatar className="h-8 w-8 flex-shrink-0">
+                        <Avatar className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0">
                           <AvatarImage src={msg.sender?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-[10px] sm:text-xs">
                             {msg.sender?.full_name ? getInitials(msg.sender.full_name) : 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <div
-                          className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                          className={`max-w-[80%] sm:max-w-[70%] rounded-lg px-3 sm:px-4 py-2 ${
                             isOwnMessage
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
                           }`}
                         >
-                          <p className="text-xs font-medium mb-1 opacity-80">
+                          <p className="text-[10px] sm:text-xs font-medium mb-1 opacity-80">
                             {msg.sender?.full_name || 'Usuario'}
                           </p>
                           {msg.voice_note_url ? (
                             <VoicePlayer voiceNoteUrl={msg.voice_note_url} />
                           ) : (
-                            <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                            <p className="text-xs sm:text-sm whitespace-pre-wrap">{msg.message}</p>
                           )}
                           <div className="flex items-center justify-end gap-1 mt-1">
-                            <span className="text-[10px] opacity-60">
+                            <span className="text-[9px] sm:text-[10px] opacity-60">
                               {format(new Date(msg.created_at), 'HH:mm', { locale: es })}
                             </span>
                             {isOwnMessage && msg.status && (
@@ -812,49 +836,55 @@ export default function TicketDetail() {
                     </div>
                   )}
 
-                  <div className="flex gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept={ALLOWED_FILE_TYPES.join(',')}
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-                    <VoiceRecorder 
-                      onRecordingComplete={handleVoiceRecordingComplete}
-                      disabled={isSending}
-                    />
-                    <Textarea
-                      placeholder="Escribe tu mensaje..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="min-h-[80px] resize-none"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                    />
-                    <Button
-                      onClick={handleSendMessage}
-                      disabled={(!newMessage.trim() && selectedFiles.length === 0) || isSending}
-                      className="self-end"
-                    >
-                      {isSending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        accept={ALLOWED_FILE_TYPES.join(',')}
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex-shrink-0"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                      <VoiceRecorder 
+                        onRecordingComplete={handleVoiceRecordingComplete}
+                        disabled={isSending}
+                      />
+                    </div>
+                    <div className="flex gap-2 flex-1">
+                      <Textarea
+                        placeholder="Escribe tu mensaje..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        className="min-h-[60px] sm:min-h-[80px] resize-none text-sm"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                      />
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={(!newMessage.trim() && selectedFiles.length === 0) || isSending}
+                        className="self-end flex-shrink-0"
+                        size="icon"
+                      >
+                        {isSending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
