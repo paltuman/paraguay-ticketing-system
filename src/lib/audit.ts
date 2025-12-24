@@ -16,13 +16,13 @@ export async function logAuditEvent({
   userId,
 }: AuditLogParams): Promise<void> {
   try {
-    const { error } = await supabase.from('audit_logs').insert({
-      user_id: userId || null,
-      action,
-      entity_type: entityType,
-      entity_id: entityId || null,
-      details: details || null,
-      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+    // Use the secure insert_audit_log function instead of direct insert
+    const { error } = await supabase.rpc('insert_audit_log', {
+      _action: action,
+      _entity_type: entityType,
+      _entity_id: entityId || null,
+      _details: details || null,
+      _user_id: userId || null,
     });
 
     if (error) {
