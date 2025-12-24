@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Menu, LogOut, User, Bell, Check, CheckCheck } from 'lucide-react';
+import { OnlineUsersIndicator } from './OnlineUsersIndicator';
 import { roleLabels } from '@/types/database';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -129,7 +130,10 @@ export function Header({ onMenuClick }: HeaderProps) {
       {/* Spacer to push content to right */}
       <div className="flex-1" />
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Online Users */}
+        <OnlineUsersIndicator />
+
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
