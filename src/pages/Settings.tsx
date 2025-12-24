@@ -42,6 +42,9 @@ import {
   Pencil,
   Trash2,
   Loader2,
+  Bell,
+  Shield,
+  Mail,
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { Department, CommonIssue } from '@/types/database';
@@ -263,19 +266,27 @@ export default function Settings() {
           Configuración
         </h1>
         <p className="text-muted-foreground">
-          Gestiona departamentos y problemas comunes del sistema
+          Gestiona departamentos, problemas comunes y preferencias del sistema
         </p>
       </div>
 
       <Tabs defaultValue="departments" className="space-y-6">
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="departments" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            Departamentos
+            <span className="hidden sm:inline">Departamentos</span>
           </TabsTrigger>
           <TabsTrigger value="common-issues" className="flex items-center gap-2">
             <Lightbulb className="h-4 w-4" />
-            Problemas Comunes
+            <span className="hidden sm:inline">Problemas Comunes</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Notificaciones</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">Seguridad</span>
           </TabsTrigger>
         </TabsList>
 
@@ -546,6 +557,136 @@ export default function Settings() {
                   )}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Notifications Tab */}
+        <TabsContent value="notifications">
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                Configuración de Notificaciones
+              </CardTitle>
+              <CardDescription>
+                Gestiona las preferencias de notificaciones del sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Notificaciones de nuevos tickets</div>
+                    <div className="text-xs text-muted-foreground">
+                      Recibe notificaciones cuando se creen nuevos tickets
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Notificaciones de mensajes</div>
+                    <div className="text-xs text-muted-foreground">
+                      Recibe notificaciones cuando recibas nuevos mensajes
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Notificaciones de cambio de estado</div>
+                    <div className="text-xs text-muted-foreground">
+                      Recibe notificaciones cuando cambie el estado de un ticket
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Notificaciones por correo</div>
+                    <div className="text-xs text-muted-foreground">
+                      Enviar resumen diario de actividades por correo electrónico
+                    </div>
+                  </div>
+                  <Switch />
+                </div>
+              </div>
+              <Button className="w-full sm:w-auto" onClick={() => {
+                toast({ title: 'Preferencias guardadas', description: 'Tus preferencias de notificación han sido actualizadas.' });
+              }}>
+                Guardar Preferencias
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                Configuración de Seguridad
+              </CardTitle>
+              <CardDescription>
+                Gestiona las políticas de seguridad del sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Autenticación de dos factores</div>
+                    <div className="text-xs text-muted-foreground">
+                      Requerir verificación adicional al iniciar sesión
+                    </div>
+                  </div>
+                  <Badge variant="outline">Próximamente</Badge>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Bloqueo por intentos fallidos</div>
+                    <div className="text-xs text-muted-foreground">
+                      Bloquear cuenta después de 5 intentos fallidos de inicio de sesión
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Expiración de sesión</div>
+                    <div className="text-xs text-muted-foreground">
+                      Cerrar sesión automáticamente después de inactividad
+                    </div>
+                  </div>
+                  <Select defaultValue="60">
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutos</SelectItem>
+                      <SelectItem value="30">30 minutos</SelectItem>
+                      <SelectItem value="60">1 hora</SelectItem>
+                      <SelectItem value="120">2 horas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Política de contraseñas</div>
+                    <div className="text-xs text-muted-foreground">
+                      Requerir contraseñas seguras con mayúsculas, números y símbolos
+                    </div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </div>
+              <Button className="w-full sm:w-auto" onClick={() => {
+                toast({ title: 'Configuración guardada', description: 'La configuración de seguridad ha sido actualizada.' });
+              }}>
+                Guardar Configuración
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

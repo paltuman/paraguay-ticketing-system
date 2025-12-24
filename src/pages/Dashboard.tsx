@@ -264,8 +264,8 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Top Performers */}
-          <TopPerformers />
+          {/* Top Performers - Only for Admin and Supervisor */}
+          {(isAdmin || isSupervisor) && <TopPerformers />}
         </div>
       </div>
 
