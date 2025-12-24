@@ -114,6 +114,13 @@ export default function Dashboard() {
       color: 'text-status-resolved',
       bgColor: 'bg-status-resolved/10',
     },
+    {
+      title: 'Cerrados',
+      value: stats.closed,
+      icon: CheckCircle2,
+      color: 'text-status-closed',
+      bgColor: 'bg-status-closed/10',
+    },
   ];
 
   if (isLoading) {
@@ -147,7 +154,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
         {statCards.map((stat) => (
           <Card key={stat.title} className="animate-slide-up border-0 shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="flex items-center gap-3 sm:gap-4 p-3 sm:p-6">
