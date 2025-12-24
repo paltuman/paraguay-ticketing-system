@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, User, ShieldCheck, Building2 } from 'lucide-react';
+import { Loader2, Mail, Lock, User, ShieldCheck, Building2, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
 import logo from '@/assets/logo-pai.png';
 import { Department } from '@/types/database';
@@ -58,6 +58,7 @@ export default function Auth() {
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Signup form state
   const [signupFullName, setSignupFullName] = useState('');
@@ -65,6 +66,8 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [signupDepartmentId, setSignupDepartmentId] = useState('');
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showSignupConfirmPassword, setShowSignupConfirmPassword] = useState(false);
 
   // Forgot password state
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -90,26 +93,58 @@ export default function Auth() {
     e.preventDefault();
     if (!resetEmail.trim()) return;
 
-    setIsResetting(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth?reset=true`,
-    });
-    setIsResetting(false);
-
-    if (error) {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(resetEmail)) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.message,
+        description: 'Ingresa un correo electrónico válido',
       });
-    } else {
-      toast({
-        title: 'Correo enviado',
-        description: 'Revisa tu bandeja de entrada para restablecer tu contraseña.',
-      });
-      setShowForgotPassword(false);
-      setResetEmail('');
+      return;
     }
+
+    setIsResetting(true);
+    
+    try {
+      const redirectUrl = `${window.location.origin}/auth`;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) {
+        // Handle specific errors
+        if (error.message.includes('User not found') || error.message.includes('not found')) {
+          toast({
+            variant: 'destructive',
+            title: 'Correo no registrado',
+            description: 'Este correo no está registrado en el sistema. Verifica e intenta nuevamente.',
+          });
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message,
+          });
+        }
+      } else {
+        toast({
+          title: 'Correo enviado',
+          description: 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.',
+        });
+        setShowForgotPassword(false);
+        setResetEmail('');
+      }
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Hubo un problema al enviar el correo. Intenta nuevamente.',
+      });
+    }
+    
+    setIsResetting(false);
   };
 
   if (isLoading) {
@@ -261,13 +296,22 @@ export default function Auth() {
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="login-password"
-                        type="password"
+                        type={showLoginPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 pr-10"
                         required
                       />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      >
+                        {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
                     </div>
                     {errors.password && (
                       <p className="text-xs text-destructive">{errors.password}</p>
@@ -301,12 +345,12 @@ export default function Auth() {
                     <DialogHeader>
                       <DialogTitle>Recuperar Contraseña</DialogTitle>
                       <DialogDescription>
-                        Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+                        Ingresa el correo electrónico con el que te registraste y te enviaremos un enlace para restablecer tu contraseña.
                       </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleForgotPassword} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="reset-email">Correo Electrónico</Label>
+                        <Label htmlFor="reset-email">Correo Electrónico Registrado</Label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
@@ -319,6 +363,9 @@ export default function Auth() {
                             required
                           />
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                          Solo se enviará el enlace si el correo está registrado en el sistema.
+                        </p>
                       </div>
                       <div className="flex gap-2 justify-end">
                         <Button type="button" variant="outline" onClick={() => setShowForgotPassword(false)}>
@@ -403,13 +450,22 @@ export default function Auth() {
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="signup-password"
-                        type="password"
+                        type={showSignupPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 pr-10"
                         required
                       />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowSignupPassword(!showSignupPassword)}
+                      >
+                        {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
                     </div>
                     {errors.password && (
                       <p className="text-xs text-destructive">{errors.password}</p>
@@ -421,13 +477,22 @@ export default function Auth() {
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="signup-confirm"
-                        type="password"
+                        type={showSignupConfirmPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={signupConfirmPassword}
                         onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 pr-10"
                         required
                       />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowSignupConfirmPassword(!showSignupConfirmPassword)}
+                      >
+                        {showSignupConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
                     </div>
                     {errors.confirmPassword && (
                       <p className="text-xs text-destructive">{errors.confirmPassword}</p>
