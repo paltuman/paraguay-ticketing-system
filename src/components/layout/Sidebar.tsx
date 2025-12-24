@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   PlusCircle,
+  Shield,
 } from 'lucide-react';
 import logo from '@/assets/logo-pai.png';
 
@@ -52,6 +53,12 @@ const navItems: NavItem[] = [
     label: 'Usuarios',
     href: '/users',
     icon: Users,
+    roles: ['admin'],
+  },
+  {
+    label: 'Auditoría',
+    href: '/audit-logs',
+    icon: Shield,
     roles: ['admin'],
   },
   {

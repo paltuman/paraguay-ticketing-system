@@ -15,6 +15,7 @@ import Statistics from "./pages/Statistics";
 import Users from "./pages/Users";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import AuditLogs from "./pages/AuditLogs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,14 @@ const App = () => (
               element={
                 <AppLayout>
                   <Settings />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/audit-logs"
+              element={
+                <AppLayout>
+                  <AuditLogs />
                 </AppLayout>
               }
             />
