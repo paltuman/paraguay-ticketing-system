@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { auditLogin, auditLogout, auditUserCreated } from '@/lib/audit';
 
 type AppRole = 'admin' | 'support_user' | 'supervisor' | 'superadmin';
 
@@ -115,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -129,6 +130,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           : error.message,
       });
       return { error };
+    }
+
+    // Log login event
+    if (data.user) {
+      auditLogin(data.user.id, email);
     }
 
     toast({
@@ -174,6 +180,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', data.user.id);
     }
 
+    // Log user created event
+    if (data.user) {
+      auditUserCreated(data.user.id, email);
+    }
+
     toast({
       title: 'Registro exitoso',
       description: 'Tu cuenta ha sido creada. Ya puedes iniciar sesión.',
@@ -182,6 +193,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    // Log logout before signing out
+    if (user && profile) {
+      auditLogout(user.id, profile.email);
+    }
+    
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Lock, Eye, EyeOff, CheckCircle2, KeyRound } from 'lucide-react';
 import { z } from 'zod';
 import logo from '@/assets/logo-pai.png';
+import { auditPasswordChange } from '@/lib/audit';
 
 const passwordSchema = z.object({
   password: z.string()
@@ -110,6 +111,12 @@ export default function ResetPassword() {
           description: error.message,
         });
       } else {
+        // Log password change
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          auditPasswordChange(user.id, user.email || '');
+        }
+        
         setIsSuccess(true);
         toast({
           title: 'Contraseña actualizada',
@@ -223,7 +230,7 @@ export default function ResetPassword() {
                   className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </Button>
               </div>
               {errors.password && (
@@ -251,7 +258,7 @@ export default function ResetPassword() {
                   className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </Button>
               </div>
               {errors.confirmPassword && (

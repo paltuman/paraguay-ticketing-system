@@ -310,7 +310,7 @@ export default function Auth() {
                         className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowLoginPassword(!showLoginPassword)}
                       >
-                        {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showLoginPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </Button>
                     </div>
                     {errors.password && (
@@ -464,7 +464,7 @@ export default function Auth() {
                         className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowSignupPassword(!showSignupPassword)}
                       >
-                        {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showSignupPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </Button>
                     </div>
                     {errors.password && (
@@ -491,7 +491,7 @@ export default function Auth() {
                         className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowSignupConfirmPassword(!showSignupConfirmPassword)}
                       >
-                        {showSignupConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showSignupConfirmPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </Button>
                     </div>
                     {errors.confirmPassword && (
