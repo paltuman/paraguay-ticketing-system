@@ -124,9 +124,9 @@ export default function TicketDetail() {
     markMessagesAsRead();
   }, [messages]);
 
-  // Check if ticket is resolved and show survey
+  // Check if ticket is resolved or closed and show survey
   useEffect(() => {
-    if (ticket?.status === 'resolved' && ticket.created_by === user?.id && !hasSurvey) {
+    if ((ticket?.status === 'resolved' || ticket?.status === 'closed') && ticket.created_by === user?.id && !hasSurvey) {
       setShowSurvey(true);
     }
   }, [ticket?.status, hasSurvey]);

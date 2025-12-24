@@ -225,49 +225,36 @@ export default function Auth() {
   return (
     <div className="flex min-h-screen">
       {/* Left Side - Hero */}
-      <div className="hidden lg:flex lg:w-1/2 gradient-hero flex-col items-center justify-center p-12 text-white">
-        <div className="animate-slide-up text-center">
-          <img src={logo} alt="PAI Paraguay" className="mx-auto mb-8 h-32 w-32 rounded-full bg-white p-2 shadow-glow" />
-          <h1 className="mb-4 text-4xl font-bold">PAI Paraguay</h1>
-          <h2 className="mb-2 text-2xl font-semibold">Programa Ampliado de Inmunizaciones</h2>
-          <p className="mb-8 text-lg opacity-90">Sistema de Gestión de Tickets</p>
-          <div className="mx-auto max-w-md space-y-4 text-left">
-            <div className="flex items-center gap-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm">
-              <ShieldCheck className="h-6 w-6 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Gestión Segura</p>
-                <p className="text-sm opacity-80">Control de acceso por roles</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm">
-              <Mail className="h-6 w-6 flex-shrink-0" />
-              <div>
-                <p className="font-medium">Comunicación Eficiente</p>
-                <p className="text-sm opacity-80">Chat integrado por ticket</p>
-              </div>
-            </div>
-          </div>
+      <div className="hidden lg:flex lg:w-1/2 gradient-hero flex-col items-center justify-center p-12 text-white relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-64 h-64 rounded-full bg-white blur-3xl" />
+          <div className="absolute bottom-20 right-20 w-48 h-48 rounded-full bg-white blur-3xl" />
         </div>
-        <p className="mt-12 text-sm opacity-60">
-          Subsistema de Información - Ministerio de Salud
+        
+        <div className="animate-slide-up text-center relative z-10">
+          <div className="mx-auto mb-10 h-44 w-44 rounded-full bg-white p-4 shadow-glow flex items-center justify-center">
+            <img src={logo} alt="PAI Paraguay" className="h-36 w-36 object-contain" />
+          </div>
+          <h1 className="mb-2 text-4xl font-bold tracking-tight">Programa Ampliado de Inmunizaciones</h1>
+          <p className="mb-12 text-xl opacity-90">Sistema de Gestión de Tickets</p>
+        </div>
+        <p className="absolute bottom-8 text-sm opacity-60">
+          Subsistema de Información
         </p>
       </div>
 
       {/* Right Side - Auth Forms */}
-      <div className="flex w-full items-center justify-center bg-background p-8 lg:w-1/2">
-        <Card className="w-full max-w-md animate-fade-in border-0 shadow-lg">
-          <CardHeader className="space-y-1 text-center">
-            <img src={logo} alt="PAI" className="mx-auto mb-4 h-16 w-16 rounded-full lg:hidden" />
-            <CardTitle className="text-2xl font-bold">Bienvenido</CardTitle>
-            <CardDescription>
-              Ingresa tus credenciales para acceder al sistema
-            </CardDescription>
+      <div className="flex w-full items-center justify-center bg-background p-4 sm:p-8 lg:w-1/2">
+        <Card className="w-full max-w-md animate-fade-in border shadow-lg">
+          <CardHeader className="space-y-1 pb-2">
+            <img src={logo} alt="PAI" className="mx-auto mb-4 h-20 w-20 rounded-full lg:hidden" />
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                <TabsTrigger value="signup">Registrarse</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login" className="text-sm font-medium">Iniciar Sesión</TabsTrigger>
+                <TabsTrigger value="signup" className="text-sm font-medium">Registrarse</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login" className="space-y-4 pt-4">

@@ -33,6 +33,7 @@ import {
   AlertCircle,
   Building2,
   Lightbulb,
+  Star,
 } from 'lucide-react';
 import { Department, TicketStatus, statusLabels, CommonIssue } from '@/types/database';
 import { Navigate } from 'react-router-dom';
@@ -43,6 +44,8 @@ interface TicketStats {
   byDepartment: { name: string; count: number }[];
   byPriority: { name: string; count: number }[];
   trend: { date: string; count: number }[];
+  avgRating: number;
+  totalSurveys: number;
 }
 
 const STATUS_COLORS = {
@@ -111,6 +114,18 @@ export default function Statistics() {
 
     const { data: tickets, error } = await query;
 
+    // Fetch satisfaction surveys stats
+    const { data: surveys } = await supabase
+      .from('satisfaction_surveys')
+      .select('rating');
+
+    let avgRating = 0;
+    let totalSurveys = 0;
+    if (surveys && surveys.length > 0) {
+      totalSurveys = surveys.length;
+      avgRating = surveys.reduce((acc, s) => acc + s.rating, 0) / totalSurveys;
+    }
+
     if (error || !tickets) {
       setIsLoading(false);
       return;
@@ -174,6 +189,8 @@ export default function Statistics() {
       byDepartment,
       byPriority,
       trend,
+      avgRating,
+      totalSurveys,
     });
 
     setIsLoading(false);
@@ -223,7 +240,7 @@ export default function Statistics() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="border-0 shadow-md">
           <CardContent className="flex items-center gap-4 p-6">
             <div className="rounded-lg bg-primary/10 p-3">
@@ -268,6 +285,18 @@ export default function Statistics() {
             <div>
               <p className="text-sm text-muted-foreground">Resueltos</p>
               <p className="text-3xl font-bold">{stats?.byStatus.resolved || 0}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-md">
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="rounded-lg bg-status-closed/10 p-3">
+              <CheckCircle2 className="h-6 w-6 text-status-closed" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Cerrados</p>
+              <p className="text-3xl font-bold">{stats?.byStatus.closed || 0}</p>
             </div>
           </CardContent>
         </Card>
@@ -459,7 +488,7 @@ export default function Statistics() {
           <CardDescription>Métricas clave del sistema</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-4">
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-2">Tasa de Resolución</p>
               <p className="text-4xl font-bold text-status-resolved">
@@ -499,6 +528,19 @@ export default function Statistics() {
               </p>
               <Badge className="mt-2 bg-status-open/20 text-status-open">
                 Sin asignar
+              </Badge>
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-2">Calificación Promedio</p>
+              <div className="flex items-center justify-center gap-1">
+                <p className="text-4xl font-bold text-yellow-500">
+                  {stats?.avgRating ? stats.avgRating.toFixed(1) : '0.0'}
+                </p>
+                <Star className="h-8 w-8 fill-yellow-400 text-yellow-400" />
+              </div>
+              <Badge className="mt-2 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                {stats?.totalSurveys || 0} encuestas
               </Badge>
             </div>
           </div>

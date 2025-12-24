@@ -200,48 +200,38 @@ export default function Users() {
   const handlePasswordChange = async () => {
     if (!selectedUser) return;
 
-    if (newPassword !== confirmPassword) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Las contraseñas no coinciden',
-      });
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'La contraseña debe tener al menos 8 caracteres',
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
-    // Note: This requires admin privileges to change other users' passwords
-    // For now, we'll send a password reset email instead
-    const { error } = await supabase.auth.resetPasswordForEmail(selectedUser.email, {
-      redirectTo: `${window.location.origin}/auth?reset=true`,
-    });
+    try {
+      // Use the edge function to send password reset email
+      const { error } = await supabase.functions.invoke('send-password-reset', {
+        body: {
+          email: selectedUser.email,
+          userName: selectedUser.full_name,
+        },
+      });
 
-    setIsSubmitting(false);
-
-    if (error) {
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.message || 'No se pudo enviar el correo de restablecimiento',
+        });
+      } else {
+        toast({
+          title: 'Correo enviado',
+          description: `Se envió un enlace de restablecimiento de contraseña a ${selectedUser.email}`,
+        });
+      }
+    } catch (err: any) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.message,
+        description: err.message || 'No se pudo enviar el correo',
       });
-      return;
     }
 
-    toast({
-      title: 'Correo enviado',
-      description: `Se envió un enlace de restablecimiento de contraseña a ${selectedUser.email}`,
-    });
-
+    setIsSubmitting(false);
     setIsPasswordDialogOpen(false);
     setNewPassword('');
     setConfirmPassword('');
