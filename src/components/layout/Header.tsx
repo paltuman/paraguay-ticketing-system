@@ -116,7 +116,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const primaryRole = isAdmin ? 'admin' : isSupervisor ? 'supervisor' : 'support_user';
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 shadow-sm">
+    <header className="flex h-16 items-center border-b border-border bg-card px-4 shadow-sm">
       <Button
         variant="ghost"
         size="icon"
@@ -125,6 +125,9 @@ export function Header({ onMenuClick }: HeaderProps) {
       >
         <Menu className="h-5 w-5" />
       </Button>
+
+      {/* Spacer to push content to right */}
+      <div className="flex-1" />
 
       <div className="flex items-center gap-4">
         {/* Notifications */}
