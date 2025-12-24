@@ -37,6 +37,8 @@ import {
 } from 'lucide-react';
 import { Department, TicketStatus, statusLabels, CommonIssue } from '@/types/database';
 import { Navigate } from 'react-router-dom';
+import { AgentRatingsChart } from '@/components/dashboard/AgentRatingsChart';
+import { ExportButton } from '@/components/statistics/ExportButton';
 
 interface TicketStats {
   total: number;
@@ -214,96 +216,102 @@ export default function Statistics() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Estadísticas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Estadísticas</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Panel de indicadores del sistema de tickets
           </p>
         </div>
-        <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-          <SelectTrigger className="w-[250px]">
-            <Building2 className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Filtrar por departamento" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los departamentos</SelectItem>
-            {departments.map((dept) => (
-              <SelectItem key={dept.id} value={dept.id}>
-                {dept.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <Building2 className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Filtrar por departamento" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los departamentos</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <ExportButton filename="estadisticas" />
+        </div>
       </div>
 
       {/* Overview Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-5">
         <Card className="border-0 shadow-md">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-lg bg-primary/10 p-3">
-              <Ticket className="h-6 w-6 text-primary" />
+          <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-6">
+            <div className="rounded-lg bg-primary/10 p-2 sm:p-3">
+              <Ticket className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Total Tickets</p>
-              <p className="text-3xl font-bold">{stats?.total || 0}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Tickets</p>
+              <p className="text-lg sm:text-3xl font-bold">{stats?.total || 0}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-md">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-lg bg-status-open/10 p-3">
-              <AlertCircle className="h-6 w-6 text-status-open" />
+          <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-6">
+            <div className="rounded-lg bg-status-open/10 p-2 sm:p-3">
+              <AlertCircle className="h-4 w-4 sm:h-6 sm:w-6 text-status-open" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Abiertos</p>
-              <p className="text-3xl font-bold">{stats?.byStatus.open || 0}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Abiertos</p>
+              <p className="text-lg sm:text-3xl font-bold">{stats?.byStatus.open || 0}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-md">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-lg bg-status-in-progress/10 p-3">
-              <Clock className="h-6 w-6 text-status-in-progress" />
+          <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-6">
+            <div className="rounded-lg bg-status-in-progress/10 p-2 sm:p-3">
+              <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-status-in-progress" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">En Proceso</p>
-              <p className="text-3xl font-bold">{stats?.byStatus.in_progress || 0}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">En Proceso</p>
+              <p className="text-lg sm:text-3xl font-bold">{stats?.byStatus.in_progress || 0}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-md">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-lg bg-status-resolved/10 p-3">
-              <CheckCircle2 className="h-6 w-6 text-status-resolved" />
+          <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-6">
+            <div className="rounded-lg bg-status-resolved/10 p-2 sm:p-3">
+              <CheckCircle2 className="h-4 w-4 sm:h-6 sm:w-6 text-status-resolved" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Resueltos</p>
-              <p className="text-3xl font-bold">{stats?.byStatus.resolved || 0}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Resueltos</p>
+              <p className="text-lg sm:text-3xl font-bold">{stats?.byStatus.resolved || 0}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-md">
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="rounded-lg bg-status-closed/10 p-3">
-              <CheckCircle2 className="h-6 w-6 text-status-closed" />
+          <CardContent className="flex items-center gap-2 sm:gap-4 p-3 sm:p-6">
+            <div className="rounded-lg bg-status-closed/10 p-2 sm:p-3">
+              <CheckCircle2 className="h-4 w-4 sm:h-6 sm:w-6 text-status-closed" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Cerrados</p>
-              <p className="text-3xl font-bold">{stats?.byStatus.closed || 0}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Cerrados</p>
+              <p className="text-lg sm:text-3xl font-bold">{stats?.byStatus.closed || 0}</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Agent Ratings Chart */}
+      <AgentRatingsChart />
+
       {/* Charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Status Pie Chart */}
         <Card className="border-0 shadow-md">
           <CardHeader>
@@ -488,10 +496,10 @@ export default function Statistics() {
           <CardDescription>Métricas clave del sistema</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 md:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 grid-cols-2 md:grid-cols-4">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Tasa de Resolución</p>
-              <p className="text-4xl font-bold text-status-resolved">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2">Tasa de Resolución</p>
+              <p className="text-2xl sm:text-4xl font-bold text-status-resolved">
                 {stats && stats.total > 0
                   ? Math.round(((stats.byStatus.resolved + stats.byStatus.closed) / stats.total) * 100)
                   : 0}
@@ -512,34 +520,34 @@ export default function Statistics() {
             </div>
 
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Tickets Activos</p>
-              <p className="text-4xl font-bold text-status-in-progress">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2">Tickets Activos</p>
+              <p className="text-2xl sm:text-4xl font-bold text-status-in-progress">
                 {stats ? stats.byStatus.open + stats.byStatus.in_progress : 0}
               </p>
-              <Badge className="mt-2 bg-status-in-progress/20 text-status-in-progress">
+              <Badge className="mt-2 text-[10px] sm:text-xs bg-status-in-progress/20 text-status-in-progress">
                 Requieren atención
               </Badge>
             </div>
 
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Tickets Pendientes</p>
-              <p className="text-4xl font-bold text-status-open">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2">Tickets Pendientes</p>
+              <p className="text-2xl sm:text-4xl font-bold text-status-open">
                 {stats?.byStatus.open || 0}
               </p>
-              <Badge className="mt-2 bg-status-open/20 text-status-open">
+              <Badge className="mt-2 text-[10px] sm:text-xs bg-status-open/20 text-status-open">
                 Sin asignar
               </Badge>
             </div>
 
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">Calificación Promedio</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2">Calificación Promedio</p>
               <div className="flex items-center justify-center gap-1">
-                <p className="text-4xl font-bold text-yellow-500">
+                <p className="text-2xl sm:text-4xl font-bold text-yellow-500">
                   {stats?.avgRating ? stats.avgRating.toFixed(1) : '0.0'}
                 </p>
-                <Star className="h-8 w-8 fill-yellow-400 text-yellow-400" />
+                <Star className="h-5 w-5 sm:h-8 sm:w-8 fill-yellow-400 text-yellow-400" />
               </div>
-              <Badge className="mt-2 bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+              <Badge className="mt-2 text-[10px] sm:text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
                 {stats?.totalSurveys || 0} encuestas
               </Badge>
             </div>
