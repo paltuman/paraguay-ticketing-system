@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { logAuditEvent } from '@/lib/audit';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -174,10 +175,12 @@ export default function Users() {
     fetchUsers();
   };
 
-  const handleToggleActive = async (userId: string, isActive: boolean) => {
+  const handleToggleActive = async (userId: string, userEmail: string, isActive: boolean) => {
+    const newStatus = !isActive;
+    
     const { error } = await supabase
       .from('profiles')
-      .update({ is_active: !isActive })
+      .update({ is_active: newStatus })
       .eq('id', userId);
 
     if (error) {
@@ -188,6 +191,15 @@ export default function Users() {
       });
       return;
     }
+
+    // Log audit event
+    await logAuditEvent({
+      action: newStatus ? 'user_activated' : 'user_deactivated',
+      entityType: 'user',
+      entityId: userId,
+      details: { email: userEmail, new_status: newStatus },
+      userId: currentUser?.id,
+    });
 
     toast({
       title: isActive ? 'Usuario inactivado' : 'Usuario activado',
@@ -405,7 +417,7 @@ export default function Users() {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => handleToggleActive(user.id, isActive)}
+                              onClick={() => handleToggleActive(user.id, user.email, isActive)}
                               className={isActive ? 'text-destructive focus:text-destructive' : 'text-status-resolved focus:text-status-resolved'}
                             >
                               {isActive ? (
