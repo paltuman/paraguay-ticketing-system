@@ -156,6 +156,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Real-time listener for is_active changes - forces logout when user is deactivated
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('profile-status-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        async (payload) => {
+          const newProfile = payload.new as { is_active?: boolean };
+          
+          if (newProfile.is_active === false) {
+            // User was deactivated - force logout immediately
+            await supabase.auth.signOut();
+            setUser(null);
+            setSession(null);
+            setProfile(null);
+            setRoles([]);
+            toast({
+              variant: 'destructive',
+              title: 'Sesión terminada',
+              description: 'Tu cuenta ha sido desactivada por un administrador.',
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, toast]);
+
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
