@@ -51,7 +51,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useImpersonation } from '@/hooks/useImpersonation';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { Loader2, Search, Users as UsersIcon, Shield, UserCog, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, Eye, Crown } from 'lucide-react';
 import { Profile, AppRole, roleLabels, Department } from '@/types/database';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -67,7 +67,7 @@ export default function Users() {
   const { isAdmin, isSuperAdmin, user: currentUser, profile: currentProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { startImpersonation } = useImpersonation();
+  const { startImpersonation, isImpersonating } = useImpersonation();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -314,22 +314,14 @@ export default function Users() {
 
   // Superadmin: Impersonate user
   const handleImpersonateUser = async (user: UserWithRoles) => {
-    if (!isSuperAdmin || !currentUser || !currentProfile) return;
+    if (!isSuperAdmin || !currentUser || !currentProfile || isImpersonating) return;
 
-    // Log audit event
-    await logAuditEvent({
-      action: 'user_impersonation_started',
-      entityType: 'user',
-      entityId: user.id,
-      details: { 
-        target_email: user.email, 
-        target_name: user.full_name,
-        impersonator_email: currentProfile.email 
-      },
-      userId: currentUser.id,
-    });
-
-    startImpersonation(currentUser.id, user.id, user.full_name);
+    await startImpersonation(
+      currentUser.id,
+      currentProfile.full_name,
+      user.id,
+      user.full_name
+    );
     
     toast({
       title: 'Modo suplantación activado',
@@ -510,7 +502,7 @@ export default function Users() {
                             </DropdownMenuItem>
                             
                             {/* Superadmin-only options */}
-                            {isSuperAdmin && (
+                            {isSuperAdmin && !isImpersonating && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem

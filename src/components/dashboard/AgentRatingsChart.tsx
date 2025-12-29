@@ -33,10 +33,32 @@ export function AgentRatingsChart() {
   }, []);
 
   const fetchAgentRatings = async () => {
+    // First get users who have admin or superadmin roles
+    const { data: adminRoles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('role', ['admin', 'superadmin']);
+
+    if (rolesError) {
+      console.error('Error fetching admin roles:', rolesError);
+      setIsLoading(false);
+      return;
+    }
+
+    const adminUserIds = adminRoles?.map(r => r.user_id) || [];
+
+    if (adminUserIds.length === 0) {
+      setAgents([]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch performance stats only for admin users
     const { data, error } = await supabase
       .from('user_performance_stats')
       .select('*')
       .gt('total_surveys', 0)
+      .in('user_id', adminUserIds)
       .order('avg_rating', { ascending: false });
 
     if (!error && data) {
@@ -94,10 +116,13 @@ export function AgentRatingsChart() {
             <TrendingUp className="h-5 w-5 text-primary" />
             Calificaciones por Agente
           </CardTitle>
+          <CardDescription>
+            Solo muestra administradores con encuestas
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-center text-sm text-muted-foreground py-8">
-            Aún no hay calificaciones registradas
+            Aún no hay calificaciones de administradores registradas
           </p>
         </CardContent>
       </Card>
@@ -112,7 +137,7 @@ export function AgentRatingsChart() {
           Calificaciones por Agente
         </CardTitle>
         <CardDescription>
-          Promedio de calificaciones de los agentes de soporte
+          Promedio de calificaciones de los administradores
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -155,7 +180,7 @@ export function AgentRatingsChart() {
         <div className="mt-6 space-y-3">
           <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Detalle de Agentes
+            Detalle de Administradores
           </h4>
           <div className="grid gap-2 sm:grid-cols-2">
             {agents.slice(0, 6).map((agent) => (
