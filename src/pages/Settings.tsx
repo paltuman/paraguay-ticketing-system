@@ -44,17 +44,39 @@ import {
   Loader2,
   Bell,
   Shield,
-  Mail,
+  Users,
+  Palette,
+  Clock,
+  Save,
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
-import { Department, CommonIssue } from '@/types/database';
+import { Department, CommonIssue, AppRole, roleLabels } from '@/types/database';
+
+interface UserWithRole {
+  id: string;
+  full_name: string;
+  email: string;
+  role: AppRole;
+  is_active: boolean;
+}
+
+interface SystemSettings {
+  ticketAutoAssign: boolean;
+  defaultPriority: string;
+  autoCloseResolvedTickets: boolean;
+  autoCloseDays: number;
+  requireSurveyOnClose: boolean;
+  maxFileSize: number;
+  allowedFileTypes: string[];
+}
 
 export default function Settings() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin } = useAuth();
   const { toast } = useToast();
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [commonIssues, setCommonIssues] = useState<CommonIssue[]>([]);
+  const [usersWithRoles, setUsersWithRoles] = useState<UserWithRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Department form state
@@ -74,6 +96,43 @@ export default function Settings() {
   const [issueActive, setIssueActive] = useState(true);
   const [issueSubmitting, setIssueSubmitting] = useState(false);
 
+  // Notification settings
+  const [notifSettings, setNotifSettings] = useState({
+    newTickets: true,
+    newMessages: true,
+    statusChanges: true,
+    emailSummary: false,
+    emailOnUrgent: true,
+  });
+
+  // Security settings
+  const [securitySettings, setSecuritySettings] = useState({
+    lockAfterFailedAttempts: true,
+    failedAttemptsLimit: 5,
+    sessionTimeout: 60,
+    requireStrongPassword: true,
+    passwordMinLength: 8,
+  });
+
+  // System settings
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>({
+    ticketAutoAssign: false,
+    defaultPriority: 'medium',
+    autoCloseResolvedTickets: true,
+    autoCloseDays: 7,
+    requireSurveyOnClose: true,
+    maxFileSize: 5,
+    allowedFileTypes: ['image/*', 'application/pdf', 'application/msword'],
+  });
+
+  // Theme settings
+  const [themeSettings, setThemeSettings] = useState({
+    primaryColor: 'default',
+    accentColor: 'blue',
+    fontSize: 'medium',
+    compactMode: false,
+  });
+
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -84,7 +143,7 @@ export default function Settings() {
 
   const fetchData = async () => {
     setIsLoading(true);
-    await Promise.all([fetchDepartments(), fetchCommonIssues()]);
+    await Promise.all([fetchDepartments(), fetchCommonIssues(), fetchUsersWithRoles()]);
     setIsLoading(false);
   };
 
@@ -107,6 +166,48 @@ export default function Settings() {
 
     if (!error && data) {
       setCommonIssues(data as unknown as CommonIssue[]);
+    }
+  };
+
+  const fetchUsersWithRoles = async () => {
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, is_active')
+      .order('full_name');
+
+    if (profilesError || !profiles) return;
+
+    const { data: roles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('user_id, role');
+
+    if (rolesError || !roles) return;
+
+    const usersData: UserWithRole[] = profiles.map(profile => {
+      const userRole = roles.find(r => r.user_id === profile.id);
+      return {
+        id: profile.id,
+        full_name: profile.full_name,
+        email: profile.email,
+        role: (userRole?.role as AppRole) || 'support_user',
+        is_active: profile.is_active,
+      };
+    });
+
+    setUsersWithRoles(usersData);
+  };
+
+  const handleRoleChange = async (userId: string, newRole: AppRole) => {
+    const { error } = await supabase
+      .from('user_roles')
+      .update({ role: newRole })
+      .eq('user_id', userId);
+
+    if (error) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } else {
+      toast({ title: 'Rol actualizado' });
+      fetchUsersWithRoles();
     }
   };
 
@@ -250,6 +351,26 @@ export default function Settings() {
     }
   };
 
+  const saveNotificationSettings = () => {
+    localStorage.setItem('notifSettings', JSON.stringify(notifSettings));
+    toast({ title: 'Preferencias guardadas', description: 'Tus preferencias de notificación han sido actualizadas.' });
+  };
+
+  const saveSecuritySettings = () => {
+    localStorage.setItem('securitySettings', JSON.stringify(securitySettings));
+    toast({ title: 'Configuración guardada', description: 'La configuración de seguridad ha sido actualizada.' });
+  };
+
+  const saveSystemSettings = () => {
+    localStorage.setItem('systemSettings', JSON.stringify(systemSettings));
+    toast({ title: 'Configuración guardada', description: 'La configuración del sistema ha sido actualizada.' });
+  };
+
+  const saveThemeSettings = () => {
+    localStorage.setItem('themeSettings', JSON.stringify(themeSettings));
+    toast({ title: 'Tema guardado', description: 'Las preferencias de tema han sido actualizadas.' });
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -266,7 +387,7 @@ export default function Settings() {
           Configuración
         </h1>
         <p className="text-muted-foreground">
-          Gestiona departamentos, problemas comunes y preferencias del sistema
+          Gestiona departamentos, roles, notificaciones y preferencias del sistema
         </p>
       </div>
 
@@ -280,9 +401,21 @@ export default function Settings() {
             <Lightbulb className="h-4 w-4" />
             <span className="hidden sm:inline">Problemas Comunes</span>
           </TabsTrigger>
+          <TabsTrigger value="roles" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Roles</span>
+          </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notificaciones</span>
+          </TabsTrigger>
+          <TabsTrigger value="system" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span className="hidden sm:inline">Sistema</span>
+          </TabsTrigger>
+          <TabsTrigger value="theme" className="flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            <span className="hidden sm:inline">Apariencia</span>
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
@@ -561,6 +694,98 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
+        {/* Roles Tab */}
+        <TabsContent value="roles">
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Gestión de Roles
+              </CardTitle>
+              <CardDescription>
+                Administra los roles y permisos de los usuarios del sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6 grid gap-4 md:grid-cols-4">
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-4">
+                    <div className="text-2xl font-bold">{usersWithRoles.filter(u => u.role === 'superadmin').length}</div>
+                    <p className="text-xs text-muted-foreground">Super Administradores</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-4">
+                    <div className="text-2xl font-bold">{usersWithRoles.filter(u => u.role === 'admin').length}</div>
+                    <p className="text-xs text-muted-foreground">Administradores</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-4">
+                    <div className="text-2xl font-bold">{usersWithRoles.filter(u => u.role === 'supervisor').length}</div>
+                    <p className="text-xs text-muted-foreground">Supervisores</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-4">
+                    <div className="text-2xl font-bold">{usersWithRoles.filter(u => u.role === 'support_user').length}</div>
+                    <p className="text-xs text-muted-foreground">Usuarios de Soporte</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Usuario</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Rol Actual</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Cambiar Rol</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {usersWithRoles.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.full_name}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={user.role === 'superadmin' ? 'default' : user.role === 'admin' ? 'secondary' : 'outline'}>
+                          {roleLabels[user.role]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={user.is_active ? 'default' : 'destructive'}>
+                          {user.is_active ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={user.role}
+                          onValueChange={(value) => handleRoleChange(user.id, value as AppRole)}
+                          disabled={user.role === 'superadmin' && !isSuperAdmin}
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="support_user">Usuario de Soporte</SelectItem>
+                            <SelectItem value="supervisor">Supervisor</SelectItem>
+                            <SelectItem value="admin">Administrador</SelectItem>
+                            {isSuperAdmin && (
+                              <SelectItem value="superadmin">Super Administrador</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Notifications Tab */}
         <TabsContent value="notifications">
           <Card className="border-0 shadow-md">
@@ -582,7 +807,10 @@ export default function Settings() {
                       Recibe notificaciones cuando se creen nuevos tickets
                     </div>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={notifSettings.newTickets}
+                    onCheckedChange={(checked) => setNotifSettings(prev => ({ ...prev, newTickets: checked }))}
+                  />
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
@@ -591,7 +819,10 @@ export default function Settings() {
                       Recibe notificaciones cuando recibas nuevos mensajes
                     </div>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={notifSettings.newMessages}
+                    onCheckedChange={(checked) => setNotifSettings(prev => ({ ...prev, newMessages: checked }))}
+                  />
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
@@ -600,22 +831,245 @@ export default function Settings() {
                       Recibe notificaciones cuando cambie el estado de un ticket
                     </div>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={notifSettings.statusChanges}
+                    onCheckedChange={(checked) => setNotifSettings(prev => ({ ...prev, statusChanges: checked }))}
+                  />
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <div className="text-sm font-medium">Notificaciones por correo</div>
+                    <div className="text-sm font-medium">Notificación inmediata de urgentes</div>
+                    <div className="text-xs text-muted-foreground">
+                      Recibir notificación por correo cuando se cree un ticket urgente
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={notifSettings.emailOnUrgent}
+                    onCheckedChange={(checked) => setNotifSettings(prev => ({ ...prev, emailOnUrgent: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Resumen diario por correo</div>
                     <div className="text-xs text-muted-foreground">
                       Enviar resumen diario de actividades por correo electrónico
                     </div>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={notifSettings.emailSummary}
+                    onCheckedChange={(checked) => setNotifSettings(prev => ({ ...prev, emailSummary: checked }))}
+                  />
                 </div>
               </div>
-              <Button className="w-full sm:w-auto" onClick={() => {
-                toast({ title: 'Preferencias guardadas', description: 'Tus preferencias de notificación han sido actualizadas.' });
-              }}>
+              <Button className="w-full sm:w-auto" onClick={saveNotificationSettings}>
+                <Save className="mr-2 h-4 w-4" />
                 Guardar Preferencias
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* System Tab */}
+        <TabsContent value="system">
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                Configuración del Sistema
+              </CardTitle>
+              <CardDescription>
+                Gestiona las configuraciones generales del sistema de tickets
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Asignación automática de tickets</div>
+                    <div className="text-xs text-muted-foreground">
+                      Asignar automáticamente nuevos tickets a agentes disponibles
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={systemSettings.ticketAutoAssign}
+                    onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, ticketAutoAssign: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Prioridad por defecto</div>
+                    <div className="text-xs text-muted-foreground">
+                      Prioridad asignada a nuevos tickets por defecto
+                    </div>
+                  </div>
+                  <Select 
+                    value={systemSettings.defaultPriority}
+                    onValueChange={(value) => setSystemSettings(prev => ({ ...prev, defaultPriority: value }))}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Baja</SelectItem>
+                      <SelectItem value="medium">Media</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="urgent">Urgente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Cierre automático de tickets resueltos</div>
+                    <div className="text-xs text-muted-foreground">
+                      Cerrar automáticamente tickets marcados como resueltos
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={systemSettings.autoCloseResolvedTickets}
+                    onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, autoCloseResolvedTickets: checked }))}
+                  />
+                </div>
+                {systemSettings.autoCloseResolvedTickets && (
+                  <div className="flex items-center justify-between rounded-lg border p-4 ml-6">
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-medium">Días para cierre automático</div>
+                      <div className="text-xs text-muted-foreground">
+                        Días de espera antes de cerrar automáticamente
+                      </div>
+                    </div>
+                    <Select 
+                      value={systemSettings.autoCloseDays.toString()}
+                      onValueChange={(value) => setSystemSettings(prev => ({ ...prev, autoCloseDays: parseInt(value) }))}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">3 días</SelectItem>
+                        <SelectItem value="5">5 días</SelectItem>
+                        <SelectItem value="7">7 días</SelectItem>
+                        <SelectItem value="14">14 días</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Requerir encuesta al cerrar</div>
+                    <div className="text-xs text-muted-foreground">
+                      Solicitar encuesta de satisfacción al cerrar tickets
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={systemSettings.requireSurveyOnClose}
+                    onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, requireSurveyOnClose: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Tamaño máximo de archivos</div>
+                    <div className="text-xs text-muted-foreground">
+                      Tamaño máximo permitido para archivos adjuntos
+                    </div>
+                  </div>
+                  <Select 
+                    value={systemSettings.maxFileSize.toString()}
+                    onValueChange={(value) => setSystemSettings(prev => ({ ...prev, maxFileSize: parseInt(value) }))}
+                  >
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">2 MB</SelectItem>
+                      <SelectItem value="5">5 MB</SelectItem>
+                      <SelectItem value="10">10 MB</SelectItem>
+                      <SelectItem value="25">25 MB</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button className="w-full sm:w-auto" onClick={saveSystemSettings}>
+                <Save className="mr-2 h-4 w-4" />
+                Guardar Configuración
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Theme Tab */}
+        <TabsContent value="theme">
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5 text-primary" />
+                Apariencia
+              </CardTitle>
+              <CardDescription>
+                Personaliza la apariencia visual del sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Color primario</div>
+                    <div className="text-xs text-muted-foreground">
+                      Color principal de la interfaz
+                    </div>
+                  </div>
+                  <Select 
+                    value={themeSettings.primaryColor}
+                    onValueChange={(value) => setThemeSettings(prev => ({ ...prev, primaryColor: value }))}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Predeterminado</SelectItem>
+                      <SelectItem value="blue">Azul</SelectItem>
+                      <SelectItem value="green">Verde</SelectItem>
+                      <SelectItem value="purple">Púrpura</SelectItem>
+                      <SelectItem value="orange">Naranja</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Tamaño de fuente</div>
+                    <div className="text-xs text-muted-foreground">
+                      Tamaño del texto en la interfaz
+                    </div>
+                  </div>
+                  <Select 
+                    value={themeSettings.fontSize}
+                    onValueChange={(value) => setThemeSettings(prev => ({ ...prev, fontSize: value }))}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Pequeño</SelectItem>
+                      <SelectItem value="medium">Mediano</SelectItem>
+                      <SelectItem value="large">Grande</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">Modo compacto</div>
+                    <div className="text-xs text-muted-foreground">
+                      Reducir el espaciado para mostrar más contenido
+                    </div>
+                  </div>
+                  <Switch 
+                    checked={themeSettings.compactMode}
+                    onCheckedChange={(checked) => setThemeSettings(prev => ({ ...prev, compactMode: checked }))}
+                  />
+                </div>
+              </div>
+              <Button className="w-full sm:w-auto" onClick={saveThemeSettings}>
+                <Save className="mr-2 h-4 w-4" />
+                Guardar Tema
               </Button>
             </CardContent>
           </Card>
@@ -648,11 +1102,37 @@ export default function Settings() {
                   <div className="space-y-0.5">
                     <div className="text-sm font-medium">Bloqueo por intentos fallidos</div>
                     <div className="text-xs text-muted-foreground">
-                      Bloquear cuenta después de 5 intentos fallidos de inicio de sesión
+                      Bloquear cuenta después de intentos fallidos de inicio de sesión
                     </div>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={securitySettings.lockAfterFailedAttempts}
+                    onCheckedChange={(checked) => setSecuritySettings(prev => ({ ...prev, lockAfterFailedAttempts: checked }))}
+                  />
                 </div>
+                {securitySettings.lockAfterFailedAttempts && (
+                  <div className="flex items-center justify-between rounded-lg border p-4 ml-6">
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-medium">Límite de intentos</div>
+                      <div className="text-xs text-muted-foreground">
+                        Número de intentos antes de bloquear
+                      </div>
+                    </div>
+                    <Select 
+                      value={securitySettings.failedAttemptsLimit.toString()}
+                      onValueChange={(value) => setSecuritySettings(prev => ({ ...prev, failedAttemptsLimit: parseInt(value) }))}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">3</SelectItem>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <div className="text-sm font-medium">Expiración de sesión</div>
@@ -660,7 +1140,10 @@ export default function Settings() {
                       Cerrar sesión automáticamente después de inactividad
                     </div>
                   </div>
-                  <Select defaultValue="60">
+                  <Select 
+                    value={securitySettings.sessionTimeout.toString()}
+                    onValueChange={(value) => setSecuritySettings(prev => ({ ...prev, sessionTimeout: parseInt(value) }))}
+                  >
                     <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
@@ -679,12 +1162,38 @@ export default function Settings() {
                       Requerir contraseñas seguras con mayúsculas, números y símbolos
                     </div>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={securitySettings.requireStrongPassword}
+                    onCheckedChange={(checked) => setSecuritySettings(prev => ({ ...prev, requireStrongPassword: checked }))}
+                  />
                 </div>
+                {securitySettings.requireStrongPassword && (
+                  <div className="flex items-center justify-between rounded-lg border p-4 ml-6">
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-medium">Longitud mínima</div>
+                      <div className="text-xs text-muted-foreground">
+                        Caracteres mínimos requeridos
+                      </div>
+                    </div>
+                    <Select 
+                      value={securitySettings.passwordMinLength.toString()}
+                      onValueChange={(value) => setSecuritySettings(prev => ({ ...prev, passwordMinLength: parseInt(value) }))}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6">6</SelectItem>
+                        <SelectItem value="8">8</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="12">12</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
-              <Button className="w-full sm:w-auto" onClick={() => {
-                toast({ title: 'Configuración guardada', description: 'La configuración de seguridad ha sido actualizada.' });
-              }}>
+              <Button className="w-full sm:w-auto" onClick={saveSecuritySettings}>
+                <Save className="mr-2 h-4 w-4" />
                 Guardar Configuración
               </Button>
             </CardContent>
