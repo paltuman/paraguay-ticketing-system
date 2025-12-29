@@ -1,17 +1,29 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Download, FileText, Table as TableIcon, Loader2 } from 'lucide-react';
+import { Download, FileText, Table as TableIcon, Loader2, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 interface ExportData {
   tickets?: any[];
@@ -31,13 +43,17 @@ interface ExportButtonProps {
 
 export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [exportType, setExportType] = useState<'pdf' | 'excel'>('pdf');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const { toast } = useToast();
 
-  const fetchExportData = async (): Promise<ExportData> => {
+  const fetchExportData = async (start: string, end: string): Promise<ExportData> => {
     if (data) return data;
 
-    // Fetch all tickets
-    const { data: tickets } = await supabase
+    // Fetch tickets with date range filter
+    let ticketQuery = supabase
       .from('tickets')
       .select(`
         ticket_number,
@@ -49,7 +65,11 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
         creator:profiles!tickets_created_by_fkey(full_name),
         department:departments(name)
       `)
+      .gte('created_at', `${start}T00:00:00`)
+      .lte('created_at', `${end}T23:59:59`)
       .order('created_at', { ascending: false });
+
+    const { data: tickets } = await ticketQuery;
 
     // Fetch agent stats
     const { data: agents } = await supabase
@@ -57,10 +77,12 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
       .select('*')
       .order('avg_rating', { ascending: false });
 
-    // Fetch surveys
+    // Fetch surveys within date range
     const { data: surveys } = await supabase
       .from('satisfaction_surveys')
-      .select('rating');
+      .select('rating')
+      .gte('created_at', `${start}T00:00:00`)
+      .lte('created_at', `${end}T23:59:59`);
 
     const total = tickets?.length || 0;
     const byStatus = {
@@ -85,10 +107,42 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
     };
   };
 
+  const handleExportClick = (type: 'pdf' | 'excel') => {
+    setExportType(type);
+    // Set default dates to last 30 days
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    setEndDate(format(today, 'yyyy-MM-dd'));
+    setStartDate(format(thirtyDaysAgo, 'yyyy-MM-dd'));
+    setIsDialogOpen(true);
+  };
+
+  const validateDates = () => {
+    if (!startDate || !endDate) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Debes seleccionar un rango de fechas',
+      });
+      return false;
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'La fecha de inicio debe ser anterior a la fecha fin',
+      });
+      return false;
+    }
+    return true;
+  };
+
   const exportToPDF = async () => {
+    if (!validateDates()) return;
+    
     setIsExporting(true);
     try {
-      const exportData = await fetchExportData();
+      const exportData = await fetchExportData(startDate, endDate);
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -97,15 +151,16 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
       doc.setTextColor(30, 58, 95);
       doc.text('Reporte de Estadísticas', pageWidth / 2, 20, { align: 'center' });
 
-      // Date
+      // Date range
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
-      doc.text(`Generado el: ${new Date().toLocaleDateString('es-PY')}`, pageWidth / 2, 28, { align: 'center' });
+      doc.text(`Período: ${format(new Date(startDate), 'dd/MM/yyyy')} - ${format(new Date(endDate), 'dd/MM/yyyy')}`, pageWidth / 2, 28, { align: 'center' });
+      doc.text(`Generado el: ${new Date().toLocaleDateString('es-PY')}`, pageWidth / 2, 34, { align: 'center' });
 
       // Stats Summary
       doc.setFontSize(14);
       doc.setTextColor(30, 58, 95);
-      doc.text('Resumen General', 14, 40);
+      doc.text('Resumen General', 14, 46);
 
       if (exportData.stats) {
         const statsData = [
@@ -119,7 +174,7 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
         ];
 
         autoTable(doc, {
-          startY: 45,
+          startY: 51,
           head: [['Métrica', 'Valor']],
           body: statsData,
           theme: 'striped',
@@ -171,7 +226,7 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
           urgent: 'Urgente',
         };
 
-        const ticketData = exportData.tickets.slice(0, 50).map((ticket: any) => [
+        const ticketData = exportData.tickets.map((ticket: any) => [
           `#${ticket.ticket_number}`,
           ticket.title?.substring(0, 30) + (ticket.title?.length > 30 ? '...' : ''),
           statusLabels[ticket.status] || ticket.status,
@@ -190,11 +245,12 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
         });
       }
 
-      doc.save(`${filename}-${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`${filename}-${startDate}-${endDate}.pdf`);
       toast({
         title: 'PDF exportado',
-        description: 'El reporte se ha descargado correctamente',
+        description: `Reporte del ${format(new Date(startDate), 'dd/MM/yyyy')} al ${format(new Date(endDate), 'dd/MM/yyyy')} descargado`,
       });
+      setIsDialogOpen(false);
     } catch (error) {
       console.error('Error exporting PDF:', error);
       toast({
@@ -207,14 +263,19 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
   };
 
   const exportToExcel = async () => {
+    if (!validateDates()) return;
+    
     setIsExporting(true);
     try {
-      const exportData = await fetchExportData();
+      const exportData = await fetchExportData(startDate, endDate);
       const wb = XLSX.utils.book_new();
 
       // Stats sheet
       if (exportData.stats) {
         const statsData = [
+          ['Período', `${format(new Date(startDate), 'dd/MM/yyyy')} - ${format(new Date(endDate), 'dd/MM/yyyy')}`],
+          ['Generado', new Date().toLocaleDateString('es-PY')],
+          [],
           ['Métrica', 'Valor'],
           ['Total Tickets', exportData.stats.total],
           ['Abiertos', exportData.stats.byStatus.open],
@@ -277,11 +338,12 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
         XLSX.utils.book_append_sheet(wb, wsTickets, 'Tickets');
       }
 
-      XLSX.writeFile(wb, `${filename}-${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(wb, `${filename}-${startDate}-${endDate}.xlsx`);
       toast({
         title: 'Excel exportado',
-        description: 'El reporte se ha descargado correctamente',
+        description: `Reporte del ${format(new Date(startDate), 'dd/MM/yyyy')} al ${format(new Date(endDate), 'dd/MM/yyyy')} descargado`,
       });
+      setIsDialogOpen(false);
     } catch (error) {
       console.error('Error exporting Excel:', error);
       toast({
@@ -293,28 +355,88 @@ export function ExportButton({ data, filename = 'reporte' }: ExportButtonProps) 
     setIsExporting(false);
   };
 
+  const handleExport = () => {
+    if (exportType === 'pdf') {
+      exportToPDF();
+    } else {
+      exportToExcel();
+    }
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" disabled={isExporting} className="gap-2">
-          {isExporting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="gap-2">
             <Download className="h-4 w-4" />
-          )}
-          <span className="hidden sm:inline">Exportar</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={exportToPDF} className="gap-2">
-          <FileText className="h-4 w-4" />
-          Exportar a PDF
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={exportToExcel} className="gap-2">
-          <TableIcon className="h-4 w-4" />
-          Exportar a Excel
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+            <span className="hidden sm:inline">Exportar</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => handleExportClick('pdf')} className="gap-2">
+            <FileText className="h-4 w-4" />
+            Exportar a PDF
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExportClick('excel')} className="gap-2">
+            <TableIcon className="h-4 w-4" />
+            Exportar a Excel
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Seleccionar Rango de Fechas
+            </DialogTitle>
+            <DialogDescription>
+              Define el período para el reporte. Este filtro es obligatorio para evitar descargar toda la base de datos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="startDate">Fecha Inicio *</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                max={endDate || undefined}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="endDate">Fecha Fin *</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate || undefined}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleExport} disabled={isExporting} className="gap-2">
+              {isExporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Exportando...
+                </>
+              ) : (
+                <>
+                  {exportType === 'pdf' ? <FileText className="h-4 w-4" /> : <TableIcon className="h-4 w-4" />}
+                  Exportar {exportType === 'pdf' ? 'PDF' : 'Excel'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

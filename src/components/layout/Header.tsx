@@ -34,7 +34,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
-  const { profile, roles, signOut, isAdmin, isSupervisor, user } = useAuth();
+  const { profile, roles, signOut, isAdmin, isSupervisor, isSuperAdmin, user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -131,8 +131,8 @@ export function Header({ onMenuClick }: HeaderProps) {
       <div className="flex-1" />
 
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* Online Users */}
-        <OnlineUsersIndicator />
+        {/* Online Users - Only visible for Superadmin */}
+        {isSuperAdmin && <OnlineUsersIndicator />}
 
         {/* Notifications */}
         <DropdownMenu>
