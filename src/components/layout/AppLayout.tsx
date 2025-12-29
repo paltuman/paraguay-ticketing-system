@@ -5,7 +5,7 @@ import { Header } from './Header';
 import { ImpersonationBanner } from './ImpersonationBanner';
 import { Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { useImpersonation } from '@/hooks/useImpersonation';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 
 interface AppLayoutProps {
   children: React.ReactNode;

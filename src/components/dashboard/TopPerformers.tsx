@@ -24,10 +24,32 @@ export function TopPerformers() {
   }, []);
 
   const fetchTopPerformers = async () => {
+    // First get users who have admin or superadmin roles
+    const { data: adminRoles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('role', ['admin', 'superadmin']);
+
+    if (rolesError) {
+      console.error('Error fetching admin roles:', rolesError);
+      setIsLoading(false);
+      return;
+    }
+
+    const adminUserIds = adminRoles?.map(r => r.user_id) || [];
+
+    if (adminUserIds.length === 0) {
+      setPerformers([]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch performance stats only for admin users
     const { data, error } = await supabase
       .from('user_performance_stats')
       .select('*')
       .gt('resolved_tickets', 0)
+      .in('user_id', adminUserIds)
       .order('avg_rating', { ascending: false })
       .order('resolved_tickets', { ascending: false })
       .limit(5);
@@ -66,7 +88,7 @@ export function TopPerformers() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-yellow-500" />
-            Top Usuarios
+            Top Administradores
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -92,12 +114,12 @@ export function TopPerformers() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-yellow-500" />
-            Top Usuarios
+            Top Administradores
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-center text-sm text-muted-foreground py-4">
-            Aún no hay datos suficientes
+            Aún no hay datos de administradores
           </p>
         </CardContent>
       </Card>
@@ -109,7 +131,7 @@ export function TopPerformers() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-yellow-500" />
-          Top Usuarios
+          Top Administradores
         </CardTitle>
       </CardHeader>
       <CardContent>
