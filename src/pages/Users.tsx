@@ -40,10 +40,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, Users as UsersIcon, Shield, UserCog, MoreHorizontal, KeyRound, UserX, UserCheck } from 'lucide-react';
+import { useImpersonation } from '@/hooks/useImpersonation';
+import { Loader2, Search, Users as UsersIcon, Shield, UserCog, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, Eye, Crown } from 'lucide-react';
 import { Profile, AppRole, roleLabels, Department } from '@/types/database';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -53,8 +64,10 @@ interface UserWithRoles extends Profile {
 }
 
 export default function Users() {
-  const { isAdmin, user: currentUser } = useAuth();
+  const { isAdmin, isSuperAdmin, user: currentUser, profile: currentProfile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { startImpersonation } = useImpersonation();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,6 +75,7 @@ export default function Users() {
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -247,6 +261,84 @@ export default function Users() {
     setSelectedUser(null);
   };
 
+  // Superadmin: Delete user permanently
+  const handleDeleteUser = async () => {
+    if (!selectedUser || !isSuperAdmin) return;
+
+    setIsSubmitting(true);
+
+    try {
+      // First delete from profiles (will cascade to user_roles)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', selectedUser.id);
+
+      if (profileError) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudo eliminar el perfil del usuario',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Log audit event
+      await logAuditEvent({
+        action: 'user_deleted',
+        entityType: 'user',
+        entityId: selectedUser.id,
+        details: { email: selectedUser.email, full_name: selectedUser.full_name },
+        userId: currentUser?.id,
+      });
+
+      toast({
+        title: 'Usuario eliminado',
+        description: `El usuario ${selectedUser.full_name} ha sido eliminado permanentemente`,
+      });
+
+      fetchUsers();
+    } catch (err: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: err.message || 'No se pudo eliminar el usuario',
+      });
+    }
+
+    setIsSubmitting(false);
+    setIsDeleteDialogOpen(false);
+    setSelectedUser(null);
+  };
+
+  // Superadmin: Impersonate user
+  const handleImpersonateUser = async (user: UserWithRoles) => {
+    if (!isSuperAdmin || !currentUser || !currentProfile) return;
+
+    // Log audit event
+    await logAuditEvent({
+      action: 'user_impersonation_started',
+      entityType: 'user',
+      entityId: user.id,
+      details: { 
+        target_email: user.email, 
+        target_name: user.full_name,
+        impersonator_email: currentProfile.email 
+      },
+      userId: currentUser.id,
+    });
+
+    startImpersonation(currentUser.id, user.id, user.full_name);
+    
+    toast({
+      title: 'Modo suplantación activado',
+      description: `Ahora estás viendo el sistema como ${user.full_name}`,
+    });
+
+    navigate('/dashboard');
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -402,6 +494,7 @@ export default function Users() {
                                 setSelectedUser(user);
                                 setIsRoleDialogOpen(true);
                               }}
+                              disabled={!isSuperAdmin && primaryRole === 'admin'}
                             >
                               <Shield className="mr-2 h-4 w-4" />
                               Cambiar Rol
@@ -415,6 +508,21 @@ export default function Users() {
                               <KeyRound className="mr-2 h-4 w-4" />
                               Restablecer Contraseña
                             </DropdownMenuItem>
+                            
+                            {/* Superadmin-only options */}
+                            {isSuperAdmin && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleImpersonateUser(user)}
+                                  className="text-primary"
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Ver como este usuario
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => handleToggleActive(user.id, user.email, isActive)}
@@ -432,6 +540,20 @@ export default function Users() {
                                 </>
                               )}
                             </DropdownMenuItem>
+                            
+                            {/* Superadmin can delete users */}
+                            {isSuperAdmin && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Eliminar permanentemente
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -470,6 +592,18 @@ export default function Users() {
                 </div>
               </div>
               <div className="space-y-2">
+                {/* Superadmin role only visible to superadmins */}
+                {isSuperAdmin && (
+                  <Button
+                    variant={selectedUser.roles[0] === 'superadmin' ? 'default' : 'outline'}
+                    className="w-full justify-start"
+                    onClick={() => handleRoleChange(selectedUser.id, 'superadmin')}
+                  >
+                    <Crown className="mr-2 h-4 w-4" />
+                    {roleLabels['superadmin']}
+                    <span className="ml-auto text-xs opacity-60">Control total</span>
+                  </Button>
+                )}
                 {(['admin', 'supervisor', 'support_user'] as AppRole[]).map((role) => (
                   <Button
                     key={role}
@@ -547,6 +681,42 @@ export default function Users() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Confirmation Dialog - Superadmin only */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => {
+        setIsDeleteDialogOpen(open);
+        if (!open) setSelectedUser(null);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Eliminar Usuario Permanentemente
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará permanentemente a <strong>{selectedUser?.full_name}</strong> ({selectedUser?.email}) del sistema. 
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                'Eliminar permanentemente'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
