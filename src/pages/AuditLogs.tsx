@@ -71,6 +71,10 @@ const actionIcons: Record<string, React.ReactNode> = {
   user_updated: <FileEdit className="h-4 w-4" />,
   user_deleted: <Trash2 className="h-4 w-4" />,
   role_changed: <Shield className="h-4 w-4" />,
+  user_activated: <UserPlus className="h-4 w-4" />,
+  user_deactivated: <Trash2 className="h-4 w-4" />,
+  user_impersonation_started: <Eye className="h-4 w-4" />,
+  ticket_status_changed: <FileEdit className="h-4 w-4" />,
 };
 
 const actionLabels: Record<string, string> = {
@@ -82,6 +86,10 @@ const actionLabels: Record<string, string> = {
   user_updated: 'Usuario actualizado',
   user_deleted: 'Usuario eliminado',
   role_changed: 'Cambio de rol',
+  user_activated: 'Usuario activado',
+  user_deactivated: 'Usuario desactivado',
+  user_impersonation_started: 'Suplantación iniciada',
+  ticket_status_changed: 'Estado de ticket cambiado',
 };
 
 const actionColors: Record<string, string> = {
@@ -93,6 +101,10 @@ const actionColors: Record<string, string> = {
   user_updated: 'bg-status-open text-white',
   user_deleted: 'bg-destructive text-destructive-foreground',
   role_changed: 'bg-primary text-primary-foreground',
+  user_activated: 'bg-status-resolved text-white',
+  user_deactivated: 'bg-destructive text-destructive-foreground',
+  user_impersonation_started: 'bg-status-in-progress text-white',
+  ticket_status_changed: 'bg-status-open text-white',
 };
 
 export default function AuditLogs() {

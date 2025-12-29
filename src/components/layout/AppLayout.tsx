@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { ImpersonationBanner } from './ImpersonationBanner';
 import { Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { useImpersonation } from '@/hooks/useImpersonation';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -11,6 +13,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, isLoading } = useAuth();
+  const { isImpersonating } = useImpersonation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   if (isLoading) {
@@ -29,7 +32,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className={`flex h-screen overflow-hidden bg-background ${isImpersonating ? 'pt-10' : ''}`}>
+      <ImpersonationBanner />
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
