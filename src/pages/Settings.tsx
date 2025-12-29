@@ -351,6 +351,20 @@ export default function Settings() {
     }
   };
 
+  const handleToggleIssueActive = async (id: string, isActive: boolean) => {
+    const { error } = await supabase
+      .from('common_issues')
+      .update({ is_active: isActive })
+      .eq('id', id);
+
+    if (error) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } else {
+      toast({ title: isActive ? 'Problema activado' : 'Problema desactivado' });
+      fetchCommonIssues();
+    }
+  };
+
   const saveNotificationSettings = () => {
     localStorage.setItem('notifSettings', JSON.stringify(notifSettings));
     toast({ title: 'Preferencias guardadas', description: 'Tus preferencias de notificación han sido actualizadas.' });
@@ -669,11 +683,24 @@ export default function Settings() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleToggleIssueActive(issue.id, !issue.is_active)}
+                            title={issue.is_active ? 'Desactivar' : 'Activar'}
+                          >
+                            {issue.is_active ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-status-resolved"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M20 6 9 17l-5-5"/></svg>
+                            )}
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => openIssueDialog(issue)}
+                            title="Editar"
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -681,6 +708,7 @@ export default function Settings() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleIssueDelete(issue.id)}
+                            title="Eliminar"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
