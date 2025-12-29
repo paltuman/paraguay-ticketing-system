@@ -169,14 +169,14 @@ export default function Tickets() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
             {isAdmin ? 'Todos los Tickets' : 'Mis Tickets'}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {isAdmin
               ? 'Gestiona todos los tickets del sistema'
               : isSupervisor
@@ -185,7 +185,7 @@ export default function Tickets() {
           </p>
         </div>
         {!isSupervisor && (
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <Link to="/tickets/new">
               <PlusCircle className="mr-2 h-4 w-4" />
               Crear Ticket
@@ -196,14 +196,14 @@ export default function Tickets() {
 
       {/* Filters */}
       <Card className="border-0 shadow-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Filter className="h-5 w-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
             Filtros
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -276,99 +276,101 @@ export default function Tickets() {
               )}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Número</TableHead>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Prioridad</TableHead>
-                  <TableHead>Departamento</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead className={isAdmin ? 'w-[100px]' : 'w-[50px]'}></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTickets.map((ticket) => (
-                  <TableRow
-                    key={ticket.id}
-                    className="cursor-pointer hover:bg-accent/50 transition-colors"
-                  >
-                    <TableCell className="font-mono text-sm">
-                      #{ticket.ticket_number}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium truncate max-w-[300px]">{ticket.title}</p>
-                        <p className="text-xs text-muted-foreground truncate max-w-[300px]">
-                          {ticket.creator?.full_name || 'Usuario'}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(ticket.status)}>
-                        {statusLabels[ticket.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
-                        {priorityLabels[ticket.priority]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {ticket.department?.name || '-'}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(ticket.created_at), 'dd MMM yyyy', { locale: es })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link to={`/tickets/${ticket.id}`}>
-                            <ArrowRight className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        {isAdmin && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive hover:text-destructive"
-                                disabled={deletingId === ticket.id}
-                              >
-                                {deletingId === ticket.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>¿Eliminar ticket #{ticket.ticket_number}?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta acción no se puede deshacer. Se eliminarán todos los mensajes y archivos adjuntos asociados.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteTicket(ticket.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Eliminar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[80px]">Número</TableHead>
+                    <TableHead className="min-w-[150px]">Título</TableHead>
+                    <TableHead className="w-[100px]">Estado</TableHead>
+                    <TableHead className="hidden sm:table-cell w-[100px]">Prioridad</TableHead>
+                    <TableHead className="hidden md:table-cell">Departamento</TableHead>
+                    <TableHead className="hidden lg:table-cell w-[100px]">Fecha</TableHead>
+                    <TableHead className={isAdmin ? 'w-[80px]' : 'w-[50px]'}></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredTickets.map((ticket) => (
+                    <TableRow
+                      key={ticket.id}
+                      className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    >
+                      <TableCell className="font-mono text-xs sm:text-sm">
+                        #{ticket.ticket_number}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium truncate max-w-[150px] sm:max-w-[300px] text-sm">{ticket.title}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[150px] sm:max-w-[300px]">
+                            {ticket.creator?.full_name || 'Usuario'}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={`${getStatusColor(ticket.status)} text-[10px] sm:text-xs`}>
+                          {statusLabels[ticket.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant="outline" className={`${getPriorityColor(ticket.priority)} text-[10px] sm:text-xs`}>
+                          {priorityLabels[ticket.priority]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                        {ticket.department?.name || '-'}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                        {format(new Date(ticket.created_at), 'dd MMM yyyy', { locale: es })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+                            <Link to={`/tickets/${ticket.id}`}>
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          {isAdmin && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:text-destructive h-8 w-8"
+                                  disabled={deletingId === ticket.id}
+                                >
+                                  {deletingId === ticket.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Eliminar ticket #{ticket.ticket_number}?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta acción no se puede deshacer. Se eliminarán todos los mensajes y archivos adjuntos asociados.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                                  <AlertDialogCancel className="mt-0">Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteTicket(ticket.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Eliminar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
