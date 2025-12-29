@@ -91,7 +91,7 @@ export default function Settings() {
   const [editingIssue, setEditingIssue] = useState<CommonIssue | null>(null);
   const [issueTitle, setIssueTitle] = useState('');
   const [issueDescription, setIssueDescription] = useState('');
-  const [issueDepartmentId, setIssueDepartmentId] = useState('');
+  const [issueDepartmentId, setIssueDepartmentId] = useState('all');
   const [issueKeywords, setIssueKeywords] = useState('');
   const [issueActive, setIssueActive] = useState(true);
   const [issueSubmitting, setIssueSubmitting] = useState(false);
@@ -279,14 +279,14 @@ export default function Settings() {
       setEditingIssue(issue);
       setIssueTitle(issue.title);
       setIssueDescription(issue.description || '');
-      setIssueDepartmentId(issue.department_id || '');
+      setIssueDepartmentId(issue.department_id || 'all');
       setIssueKeywords(issue.keywords?.join(', ') || '');
       setIssueActive(issue.is_active);
     } else {
       setEditingIssue(null);
       setIssueTitle('');
       setIssueDescription('');
-      setIssueDepartmentId('');
+      setIssueDepartmentId('all');
       setIssueKeywords('');
       setIssueActive(true);
     }
@@ -305,7 +305,7 @@ export default function Settings() {
     const issueData = {
       title: issueTitle,
       description: issueDescription || null,
-      department_id: issueDepartmentId || null,
+      department_id: issueDepartmentId === 'all' ? null : issueDepartmentId,
       keywords: keywordsArray,
       is_active: issueActive,
     };
@@ -605,7 +605,7 @@ export default function Settings() {
                           <SelectValue placeholder="Todos los departamentos" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Todos los departamentos</SelectItem>
+                          <SelectItem value="all">Todos los departamentos</SelectItem>
                           {departments.map((dept) => (
                             <SelectItem key={dept.id} value={dept.id}>
                               {dept.name}
