@@ -39,6 +39,7 @@ import { Department, TicketStatus, statusLabels, CommonIssue } from '@/types/dat
 import { Navigate } from 'react-router-dom';
 import { AgentRatingsChart } from '@/components/dashboard/AgentRatingsChart';
 import { ExportButton } from '@/components/statistics/ExportButton';
+import { TopTicketCreators } from '@/components/statistics/TopTicketCreators';
 
 interface TicketStats {
   total: number;
@@ -307,8 +308,11 @@ export default function Statistics() {
         </Card>
       </div>
 
-      {/* Agent Ratings Chart */}
-      <AgentRatingsChart />
+      {/* Top Charts Row */}
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+        <AgentRatingsChart />
+        <TopTicketCreators />
+      </div>
 
       {/* Charts */}
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">

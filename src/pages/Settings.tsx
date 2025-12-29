@@ -368,7 +368,14 @@ export default function Settings() {
 
   const saveThemeSettings = () => {
     localStorage.setItem('themeSettings', JSON.stringify(themeSettings));
-    toast({ title: 'Tema guardado', description: 'Las preferencias de tema han sido actualizadas.' });
+    // Trigger event to apply theme immediately
+    window.dispatchEvent(new CustomEvent('themeSettingsChanged', { detail: themeSettings }));
+    // Also trigger storage event for other tabs
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'themeSettings',
+      newValue: JSON.stringify(themeSettings),
+    }));
+    toast({ title: 'Tema guardado', description: 'Las preferencias de tema han sido aplicadas.' });
   };
 
   if (isLoading) {
