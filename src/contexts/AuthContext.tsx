@@ -51,7 +51,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error fetching profile:', error);
       return null;
     }
-    return data as Profile | null;
+    return data as (Profile & { is_active?: boolean }) | null;
+  };
+
+  const checkAndHandleInactiveUser = async (userId: string) => {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('is_active')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (profileData && profileData.is_active === false) {
+      // User is inactive, sign them out
+      await supabase.auth.signOut();
+      toast({
+        variant: 'destructive',
+        title: 'Cuenta inactiva',
+        description: 'Tu cuenta ha sido desactivada. Contacta al administrador.',
+      });
+      return true; // User is inactive
+    }
+    return false; // User is active
   };
 
   const fetchRoles = async (userId: string) => {
@@ -77,6 +97,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Defer profile and roles fetch with setTimeout
         if (session?.user) {
           setTimeout(async () => {
+            // Check if user is active first
+            const isInactive = await checkAndHandleInactiveUser(session.user.id);
+            if (isInactive) {
+              setUser(null);
+              setSession(null);
+              setProfile(null);
+              setRoles([]);
+              setIsLoading(false);
+              return;
+            }
+
             const [profileData, rolesData] = await Promise.all([
               fetchProfile(session.user.id),
               fetchRoles(session.user.id)
@@ -94,19 +125,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        Promise.all([
+        // Check if user is active first
+        const isInactive = await checkAndHandleInactiveUser(session.user.id);
+        if (isInactive) {
+          setUser(null);
+          setSession(null);
+          setProfile(null);
+          setRoles([]);
+          setIsLoading(false);
+          return;
+        }
+
+        const [profileData, rolesData] = await Promise.all([
           fetchProfile(session.user.id),
           fetchRoles(session.user.id)
-        ]).then(([profileData, rolesData]) => {
-          setProfile(profileData);
-          setRoles(rolesData);
-          setIsLoading(false);
-        });
+        ]);
+        setProfile(profileData);
+        setRoles(rolesData);
+        setIsLoading(false);
       } else {
         setIsLoading(false);
       }
