@@ -27,7 +27,7 @@ interface Stats {
 }
 
 export default function Dashboard() {
-  const { profile, isAdmin, isSupervisor } = useAuth();
+  const { profile, isAdmin, isSupervisor, isSuperAdmin } = useAuth();
   const [stats, setStats] = useState<Stats>({ total: 0, open: 0, inProgress: 0, resolved: 0, closed: 0 });
   const [recentTickets, setRecentTickets] = useState<TicketWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -271,16 +271,9 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Top Performers - Only for Admin and Supervisor */}
-          {(isAdmin || isSupervisor) && <TopPerformers />}
+          {/* Top Performers - Only for Admin and Superadmin */}
+          {(isAdmin || isSuperAdmin) && <TopPerformers />}
         </div>
-      </div>
-
-      {/* Copyright */}
-      <div className="pt-4 text-center">
-        <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Subsistema de Información. Todos los derechos reservados.
-        </p>
       </div>
     </div>
   );
