@@ -40,6 +40,7 @@ import {
   Loader2,
   Ticket as TicketIcon,
   Trash2,
+  User,
 } from 'lucide-react';
 import {
   TicketWithRelations,
@@ -53,11 +54,17 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
+interface Agent {
+  id: string;
+  full_name: string;
+}
+
 export default function Tickets() {
   const { isAdmin, isSupervisor } = useAuth();
   const { toast } = useToast();
   const [tickets, setTickets] = useState<TicketWithRelations[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
@@ -66,11 +73,15 @@ export default function Tickets() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [agentFilter, setAgentFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchTickets();
     fetchDepartments();
-  }, []);
+    if (isAdmin) {
+      fetchAgents();
+    }
+  }, [isAdmin]);
 
   const fetchTickets = async () => {
     setIsLoading(true);
@@ -98,6 +109,31 @@ export default function Tickets() {
 
     if (!error && data) {
       setDepartments(data);
+    }
+  };
+
+  const fetchAgents = async () => {
+    // Fetch users with admin role
+    const { data: adminRoles } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin');
+
+    if (!adminRoles || adminRoles.length === 0) {
+      setAgents([]);
+      return;
+    }
+
+    const userIds = adminRoles.map(r => r.user_id);
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', userIds)
+      .eq('is_active', true)
+      .order('full_name');
+
+    if (profiles) {
+      setAgents(profiles as Agent[]);
     }
   };
 
@@ -136,8 +172,13 @@ export default function Tickets() {
     const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
     const matchesDepartment = departmentFilter === 'all' || ticket.department_id === departmentFilter;
     const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
+    const matchesAgent = agentFilter === 'all' 
+      ? true 
+      : agentFilter === 'unassigned' 
+        ? !ticket.assigned_to 
+        : ticket.assigned_to === agentFilter;
 
-    return matchesSearch && matchesStatus && matchesDepartment && matchesPriority;
+    return matchesSearch && matchesStatus && matchesDepartment && matchesPriority && matchesAgent;
   });
 
   const getStatusColor = (status: TicketStatus) => {
@@ -203,7 +244,7 @@ export default function Tickets() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -250,6 +291,22 @@ export default function Tickets() {
                 <SelectItem value="urgent">Urgente</SelectItem>
               </SelectContent>
             </Select>
+            {isAdmin && (
+              <Select value={agentFilter} onValueChange={setAgentFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Agente asignado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los agentes</SelectItem>
+                  <SelectItem value="unassigned">Sin asignar</SelectItem>
+                  {agents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id}>
+                      {agent.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </CardContent>
       </Card>

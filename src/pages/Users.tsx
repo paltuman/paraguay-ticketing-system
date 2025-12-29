@@ -197,18 +197,15 @@ export default function Users() {
     fetchUsers();
   };
 
-  const handlePasswordChange = async () => {
+  const handlePasswordReset = async () => {
     if (!selectedUser) return;
 
     setIsSubmitting(true);
 
     try {
-      // Use the edge function to send password reset email
-      const { error } = await supabase.functions.invoke('send-password-reset', {
-        body: {
-          email: selectedUser.email,
-          userName: selectedUser.full_name,
-        },
+      // Use Supabase's built-in password reset - same as "forgot password"
+      const { error } = await supabase.auth.resetPasswordForEmail(selectedUser.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) {
@@ -525,7 +522,7 @@ export default function Users() {
             <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handlePasswordChange} disabled={isSubmitting}>
+            <Button onClick={handlePasswordReset} disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

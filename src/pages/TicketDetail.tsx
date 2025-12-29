@@ -75,6 +75,13 @@ interface TicketViewer {
   };
 }
 
+interface AdminUser {
+  id: string;
+  full_name: string;
+  email: string;
+  avatar_url: string | null;
+}
+
 export default function TicketDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, profile, isAdmin, isSupervisor } = useAuth();
@@ -94,6 +101,8 @@ export default function TicketDetail() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showSurvey, setShowSurvey] = useState(false);
   const [hasSurvey, setHasSurvey] = useState(false);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [isReassigning, setIsReassigning] = useState(false);
   useEffect(() => {
     if (id) {
       fetchTicket();
@@ -105,6 +114,9 @@ export default function TicketDetail() {
       fetchViewers();
       subscribeToViewers();
       checkExistingSurvey();
+      if (isAdmin) {
+        fetchAdminUsers();
+      }
     }
 
     return () => {
@@ -117,7 +129,7 @@ export default function TicketDetail() {
           .eq('user_id', user.id);
       }
     };
-  }, [id]);
+  }, [id, isAdmin]);
 
   useEffect(() => {
     scrollToBottom();
@@ -501,6 +513,84 @@ export default function TicketDetail() {
     setSelectedFiles([]);
     fetchAttachments();
     setIsSending(false);
+  };
+
+  const fetchAdminUsers = async () => {
+    // Fetch users with admin role
+    const { data: adminRoles } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin');
+
+    if (!adminRoles || adminRoles.length === 0) {
+      setAdminUsers([]);
+      return;
+    }
+
+    const userIds = adminRoles.map(r => r.user_id);
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, avatar_url')
+      .in('id', userIds)
+      .eq('is_active', true);
+
+    if (profiles) {
+      setAdminUsers(profiles as AdminUser[]);
+    }
+  };
+
+  const handleReassign = async (newAssigneeId: string) => {
+    if (!ticket || !user) return;
+    
+    setIsReassigning(true);
+    
+    const { error } = await supabase
+      .from('tickets')
+      .update({ assigned_to: newAssigneeId === 'unassigned' ? null : newAssigneeId })
+      .eq('id', ticket.id);
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo reasignar el ticket',
+      });
+      setIsReassigning(false);
+      return;
+    }
+
+    const newAssignee = adminUsers.find(a => a.id === newAssigneeId);
+
+    // Add system message
+    await supabase.from('ticket_messages').insert({
+      ticket_id: ticket.id,
+      sender_id: user.id,
+      message: newAssigneeId === 'unassigned' 
+        ? 'Ticket sin asignar'
+        : `Ticket reasignado a ${newAssignee?.full_name || 'Agente'}`,
+      is_system_message: true,
+    });
+
+    // Notify new assignee if assigned
+    if (newAssigneeId !== 'unassigned' && newAssigneeId !== user.id) {
+      await supabase.from('notifications').insert({
+        user_id: newAssigneeId,
+        title: `Ticket #${ticket.ticket_number} asignado`,
+        message: 'Se te ha asignado un nuevo ticket',
+        type: 'info',
+        ticket_id: ticket.id,
+      });
+    }
+
+    toast({
+      title: 'Ticket reasignado',
+      description: newAssigneeId === 'unassigned' 
+        ? 'El ticket ha sido desasignado' 
+        : `Asignado a ${newAssignee?.full_name || 'Agente'}`,
+    });
+
+    setIsReassigning(false);
+    fetchTicket();
   };
 
   const handleStatusChange = async (newStatus: TicketStatus) => {
@@ -926,6 +1016,33 @@ export default function TicketDetail() {
                       <SelectItem value="in_progress">En Proceso</SelectItem>
                       <SelectItem value="resolved">Resuelto</SelectItem>
                       <SelectItem value="closed">Cerrado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Reassign Control (Admin only) */}
+              {isAdmin && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Asignar a Agente
+                  </label>
+                  <Select
+                    value={ticket.assigned_to || 'unassigned'}
+                    onValueChange={handleReassign}
+                    disabled={isReassigning}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Sin asignar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Sin asignar</SelectItem>
+                      {adminUsers.map((admin) => (
+                        <SelectItem key={admin.id} value={admin.id}>
+                          {admin.full_name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
