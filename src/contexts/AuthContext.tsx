@@ -132,8 +132,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error };
     }
 
-    // Log login event
+    // Check if user is active
     if (data.user) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_active')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (profileData && profileData.is_active === false) {
+        // Sign out the user immediately
+        await supabase.auth.signOut();
+        toast({
+          variant: 'destructive',
+          title: 'Cuenta inactiva',
+          description: 'Tu cuenta ha sido desactivada. Contacta al administrador.',
+        });
+        return { error: new Error('User account is inactive') };
+      }
+
+      // Log login event
       auditLogin(data.user.id, email);
     }
 
@@ -209,7 +227,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const isSuperAdmin = roles.includes('superadmin');
+  // Check for superadmin by email or role
+  const isSuperAdminByEmail = profile?.email === 'subsistema.pai@mspbs.gov.py';
+  const isSuperAdmin = roles.includes('superadmin') || isSuperAdminByEmail;
   const isAdmin = roles.includes('admin') || isSuperAdmin;
   const isSupervisor = roles.includes('supervisor');
   const isSupportUser = roles.includes('support_user');

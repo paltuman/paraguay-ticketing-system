@@ -275,19 +275,19 @@ export default function Users() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Gestión de Usuarios</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Gestión de Usuarios</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Administra los usuarios y sus roles en el sistema
         </p>
       </div>
 
       {/* Search */}
       <Card className="border-0 shadow-md">
-        <CardContent className="pt-6">
-          <div className="relative max-w-sm">
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar usuarios..."
