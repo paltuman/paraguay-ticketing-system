@@ -153,19 +153,22 @@ export function TopPerformers() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">{performer.full_name}</p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    {Number(performer.avg_rating).toFixed(1)}
-                  </span>
-                  <span>•</span>
                   <span>{performer.resolved_tickets} resueltos</span>
                 </div>
               </div>
-              {index < 3 && (
-                <Badge variant="secondary" className="text-[10px]">
-                  Top {index + 1}
-                </Badge>
-              )}
+              <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded-full">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-300">
+                    {Number(performer.avg_rating || 0).toFixed(1)}
+                  </span>
+                </div>
+                {index < 3 && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    Top {index + 1}
+                  </Badge>
+                )}
+              </div>
             </div>
           ))}
         </div>
