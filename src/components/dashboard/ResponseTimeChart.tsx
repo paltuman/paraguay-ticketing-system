@@ -19,23 +19,25 @@ interface ResponseData {
   color: string;
 }
 
-interface ResponseTimeChartProps {
-  filters?: {
-    departmentId: string | null;
-    agentId: string | null;
-    startDate: Date;
-    endDate: Date;
-  };
+interface ChartFilters {
+  departmentId?: string | null;
+  agentId?: string | null;
+  startDate?: Date;
+  endDate?: Date;
 }
 
-export function ResponseTimeChart({ filters }: ResponseTimeChartProps) {
+interface Props {
+  filters?: ChartFilters;
+}
+
+export function ResponseTimeChart({ filters }: Props) {
   const [data, setData] = useState<ResponseData[]>([]);
   const [avgTime, setAvgTime] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchResponseData();
-  }, [filters]);
+  }, [filters?.departmentId, filters?.startDate, filters?.endDate]);
 
   const fetchResponseData = async () => {
     setIsLoading(true);
@@ -47,9 +49,6 @@ export function ResponseTimeChart({ filters }: ResponseTimeChartProps) {
 
     if (filters?.departmentId) {
       query = query.eq('department_id', filters.departmentId);
-    }
-    if (filters?.agentId) {
-      query = query.eq('assigned_to', filters.agentId);
     }
     if (filters?.startDate) {
       query = query.gte('created_at', filters.startDate.toISOString());

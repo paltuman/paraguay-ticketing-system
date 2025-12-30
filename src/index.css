@@ -181,79 +181,102 @@
 }
 
 @layer components {
-  /* Glass Card */
+  /* Glass Card - Premium Effect */
   .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-lg;
-    background: linear-gradient(135deg, hsl(var(--card) / 0.9) 0%, hsl(var(--card) / 0.7) 100%);
+    @apply relative overflow-hidden bg-card/85 backdrop-blur-2xl border border-border/30 shadow-xl rounded-2xl;
+    background: linear-gradient(145deg, 
+      hsl(var(--card) / 0.95) 0%, 
+      hsl(var(--card) / 0.85) 50%,
+      hsl(var(--card) / 0.75) 100%);
   }
 
-  /* Modern Card */
+  .glass-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+    background: radial-gradient(ellipse at 50% 0%, hsl(var(--primary) / 0.08) 0%, transparent 70%);
+  }
+
+  .glass-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Modern Card with Glow */
   .card-modern {
-    @apply relative overflow-hidden bg-card border-0 shadow-md transition-all duration-300;
+    @apply relative overflow-hidden bg-card border-0 shadow-lg rounded-2xl transition-all duration-500;
   }
 
   .card-modern::before {
     content: '';
-    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
     background: var(--gradient-mesh);
   }
 
   .card-modern:hover {
-    @apply shadow-xl -translate-y-0.5;
+    @apply shadow-2xl;
+    transform: translateY(-4px);
   }
 
   .card-modern:hover::before {
     @apply opacity-100;
   }
 
-  /* Stat Card */
+  /* Stat Card - Enhanced */
   .stat-card {
-    @apply relative overflow-hidden bg-card border-0 shadow-md transition-all duration-300 rounded-xl;
+    @apply relative overflow-hidden bg-card border-0 shadow-lg rounded-2xl transition-all duration-500;
+    background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.95) 100%);
   }
 
   .stat-card::after {
     content: '';
-    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, transparent 100%);
+    @apply absolute inset-0 opacity-0 transition-opacity duration-700;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.08) 0%, transparent 60%);
   }
 
   .stat-card:hover {
-    @apply shadow-lg;
-    transform: translateY(-2px);
+    @apply shadow-2xl;
+    transform: translateY(-6px) scale(1.02);
   }
 
   .stat-card:hover::after {
     @apply opacity-100;
   }
 
-  /* Interactive List Item */
+  /* Interactive List Item - Premium */
   .list-item-interactive {
-    @apply flex items-center justify-between rounded-xl border border-border/50 p-4 transition-all duration-200;
-    @apply hover:bg-accent/50 hover:border-primary/20 hover:shadow-sm;
+    @apply flex items-center justify-between rounded-xl border border-border/40 p-4;
+    @apply bg-gradient-to-r from-transparent to-transparent;
+    @apply transition-all duration-300 ease-out;
   }
 
-  /* Status Indicator */
+  .list-item-interactive:hover {
+    @apply bg-accent/60 border-primary/30 shadow-lg;
+    transform: translateX(4px);
+  }
+
+  /* Status Indicator with Pulse */
   .status-indicator {
     @apply relative inline-flex;
   }
 
   .status-indicator::before {
     content: '';
-    @apply absolute -inset-1 rounded-full animate-ping opacity-75;
+    @apply absolute -inset-1.5 rounded-full animate-ping opacity-60;
   }
 
   .status-indicator.online::before {
-    @apply bg-success/50;
+    @apply bg-success/40;
   }
 
-  /* Pill Badge */
+  /* Premium Pill Badge */
   .pill-badge {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold;
+    @apply shadow-sm transition-all duration-300;
+    @apply hover:shadow-md hover:scale-105;
   }
 
-  /* Hero Section */
+  /* Hero Section - Immersive */
   .hero-section {
-    @apply relative overflow-hidden rounded-2xl p-6 sm:p-8;
+    @apply relative overflow-hidden rounded-3xl p-8 sm:p-10;
     background: var(--gradient-primary);
   }
 
@@ -263,19 +286,54 @@
     background: var(--gradient-mesh);
   }
 
-  /* Input Modern */
-  .input-modern {
-    @apply transition-all duration-200 border-border/50;
-    @apply focus:border-primary/50 focus:ring-4 focus:ring-primary/10;
+  .hero-section::after {
+    content: '';
+    @apply absolute inset-0 opacity-30;
+    background: radial-gradient(circle at 80% 20%, hsl(var(--primary-foreground) / 0.15) 0%, transparent 50%);
   }
 
-  /* Button with Glow */
+  /* Premium Input */
+  .input-modern {
+    @apply transition-all duration-300 border-border/50 bg-background/50 backdrop-blur-sm;
+    @apply focus:border-primary/60 focus:ring-4 focus:ring-primary/15 focus:bg-background;
+  }
+
+  /* Glow Button - Premium */
   .btn-glow {
-    @apply relative overflow-hidden transition-all duration-300;
+    @apply relative overflow-hidden transition-all duration-400;
+  }
+
+  .btn-glow::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-400;
+    background: linear-gradient(45deg, transparent 30%, hsl(var(--primary-foreground) / 0.1) 50%, transparent 70%);
   }
 
   .btn-glow:hover {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.25);
+    transform: translateY(-2px);
+  }
+
+  .btn-glow:hover::before {
+    @apply opacity-100;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Floating Action Button */
+  .fab {
+    @apply fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-2xl;
+    @apply bg-primary text-primary-foreground;
+    @apply transition-all duration-300 hover:scale-110;
+    box-shadow: 0 8px 32px hsl(var(--primary) / 0.4);
+  }
+
+  .fab:hover {
+    box-shadow: 0 12px 48px hsl(var(--primary) / 0.5);
   }
 }
 
