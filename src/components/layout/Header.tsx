@@ -13,12 +13,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Menu, LogOut, User, Bell, Check, CheckCheck } from 'lucide-react';
+import { Menu, LogOut, User, Bell, Check, CheckCheck, BellRing } from 'lucide-react';
 import { OnlineUsersIndicator } from './OnlineUsersIndicator';
+import { ThemeToggle } from './ThemeToggle';
 import { roleLabels } from '@/types/database';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 interface Notification {
   id: string;
   title: string;
@@ -37,6 +39,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const { profile, roles, signOut, isAdmin, isSupervisor, isSuperAdmin, user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { permission, requestPermission, isSupported } = usePushNotifications();
 
   useEffect(() => {
     if (user) {
@@ -130,7 +133,23 @@ export function Header({ onMenuClick }: HeaderProps) {
       {/* Spacer to push content to right */}
       <div className="flex-1" />
 
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Push Notification Permission */}
+        {isSupported && permission !== 'granted' && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={requestPermission}
+            className="relative hover:bg-accent/80 transition-colors"
+            title="Activar notificaciones push"
+          >
+            <BellRing className="h-5 w-5 text-muted-foreground" />
+          </Button>
+        )}
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
         {/* Online Users - Only visible for Superadmin */}
         {isSuperAdmin && <OnlineUsersIndicator />}
 
