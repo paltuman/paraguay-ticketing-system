@@ -86,28 +86,35 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'relative flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300',
+        'relative flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out',
         isOpen ? 'w-64' : 'w-20'
       )}
     >
       {/* Logo */}
       <div className="flex h-16 items-center justify-center border-b border-sidebar-border px-4">
-        <Link to="/dashboard" className="flex items-center gap-3">
-          <img
-            src={logo}
-            alt="Logo"
-            className={cn('h-10 w-10 rounded-full bg-white p-0.5 transition-all', isOpen ? '' : 'h-12 w-12')}
-          />
+        <Link to="/dashboard" className="flex items-center gap-3 group">
+          <div className="relative">
+            <img
+              src={logo}
+              alt="Logo"
+              className={cn(
+                'rounded-full bg-white p-0.5 transition-all duration-300 ring-2 ring-sidebar-primary/20 group-hover:ring-sidebar-primary/50', 
+                isOpen ? 'h-10 w-10' : 'h-11 w-11'
+              )}
+            />
+            <div className="absolute inset-0 rounded-full bg-sidebar-primary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
           {isOpen && (
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-sidebar-foreground">Sistema de Tickets</span>
+            <div className="flex flex-col animate-fade-in">
+              <span className="text-sm font-bold text-sidebar-foreground tracking-tight">Sistema de Tickets</span>
+              <span className="text-[10px] text-sidebar-foreground/60 font-medium">PAI Paraguay</span>
             </div>
           )}
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-1.5 p-3 overflow-y-auto scrollbar-thin">
         {filteredNavItems.map((item) => {
           const isActive = location.pathname === item.href || 
             (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
@@ -118,15 +125,27 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               key={item.href}
               to={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-glow'
+                  ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                 !isOpen && 'justify-center px-2'
               )}
             >
-              <Icon className={cn('h-5 w-5 flex-shrink-0', isActive && 'animate-pulse-soft')} />
-              {isOpen && <span className="truncate">{item.label}</span>}
+              {isActive && (
+                <div className="absolute inset-0 rounded-xl bg-sidebar-primary/20 blur-md" />
+              )}
+              <Icon className={cn('relative h-5 w-5 flex-shrink-0 transition-transform duration-200', 
+                isActive ? 'scale-110' : 'group-hover:scale-110'
+              )} />
+              {isOpen && <span className="relative truncate">{item.label}</span>}
+              
+              {/* Tooltip for collapsed state */}
+              {!isOpen && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground rounded-lg text-xs font-medium opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap shadow-lg z-50">
+                  {item.label}
+                </div>
+              )}
             </Link>
           );
         })}
@@ -135,17 +154,22 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-md transition-colors hover:bg-sidebar-accent"
+        className="absolute -right-3 top-20 flex h-7 w-7 items-center justify-center rounded-full border border-sidebar-border bg-card text-foreground shadow-lg transition-all duration-200 hover:bg-accent hover:scale-110 z-10"
       >
         {isOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
       </button>
 
       {/* Footer */}
       <div className="border-t border-sidebar-border p-4">
-        {isOpen && (
-          <p className="text-center text-xs text-sidebar-foreground/50">
-            Subsistema de Información
-          </p>
+        {isOpen ? (
+          <div className="text-center animate-fade-in">
+            <p className="text-xs text-sidebar-foreground/60 font-medium">Subsistema de Información</p>
+            <p className="text-[10px] text-sidebar-foreground/40 mt-0.5">v2.0.0</p>
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <div className="h-2 w-2 rounded-full bg-success animate-pulse" title="Sistema activo" />
+          </div>
         )}
       </div>
     </aside>

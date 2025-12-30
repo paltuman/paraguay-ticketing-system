@@ -68,6 +68,14 @@ interface SystemSettings {
   requireSurveyOnClose: boolean;
   maxFileSize: number;
   allowedFileTypes: string[];
+  enableNotificationSound: boolean;
+  defaultDepartment: string;
+  workingHoursStart: string;
+  workingHoursEnd: string;
+  weekendSupport: boolean;
+  escalationEnabled: boolean;
+  escalationHours: number;
+  maintenanceMode: boolean;
 }
 
 export default function Settings() {
@@ -123,6 +131,14 @@ export default function Settings() {
     requireSurveyOnClose: true,
     maxFileSize: 5,
     allowedFileTypes: ['image/*', 'application/pdf', 'application/msword'],
+    enableNotificationSound: true,
+    defaultDepartment: '',
+    workingHoursStart: '08:00',
+    workingHoursEnd: '17:00',
+    weekendSupport: false,
+    escalationEnabled: true,
+    escalationHours: 24,
+    maintenanceMode: false,
   });
 
   // Theme settings
@@ -1021,6 +1037,85 @@ export default function Settings() {
                       <SelectItem value="25">25 MB</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                
+                {/* Advanced System Settings */}
+                <div className="border-t pt-6 mt-6">
+                  <h3 className="text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wide">Configuración Avanzada</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <div className="text-sm font-medium">Sonidos de notificación</div>
+                        <div className="text-xs text-muted-foreground">
+                          Reproducir sonido al recibir nuevas notificaciones
+                        </div>
+                      </div>
+                      <Switch 
+                        checked={systemSettings.enableNotificationSound}
+                        onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, enableNotificationSound: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <div className="text-sm font-medium">Escalado automático</div>
+                        <div className="text-xs text-muted-foreground">
+                          Escalar tickets no atendidos a supervisores
+                        </div>
+                      </div>
+                      <Switch 
+                        checked={systemSettings.escalationEnabled}
+                        onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, escalationEnabled: checked }))}
+                      />
+                    </div>
+                    {systemSettings.escalationEnabled && (
+                      <div className="flex items-center justify-between rounded-lg border p-4 ml-6">
+                        <div className="space-y-0.5">
+                          <div className="text-sm font-medium">Horas para escalado</div>
+                          <div className="text-xs text-muted-foreground">
+                            Tiempo sin respuesta antes de escalar
+                          </div>
+                        </div>
+                        <Select 
+                          value={systemSettings.escalationHours.toString()}
+                          onValueChange={(value) => setSystemSettings(prev => ({ ...prev, escalationHours: parseInt(value) }))}
+                        >
+                          <SelectTrigger className="w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="4">4 horas</SelectItem>
+                            <SelectItem value="8">8 horas</SelectItem>
+                            <SelectItem value="24">24 horas</SelectItem>
+                            <SelectItem value="48">48 horas</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <div className="text-sm font-medium">Soporte en fines de semana</div>
+                        <div className="text-xs text-muted-foreground">
+                          Habilitar atención de tickets durante fines de semana
+                        </div>
+                      </div>
+                      <Switch 
+                        checked={systemSettings.weekendSupport}
+                        onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, weekendSupport: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+                      <div className="space-y-0.5">
+                        <div className="text-sm font-medium text-destructive">Modo mantenimiento</div>
+                        <div className="text-xs text-muted-foreground">
+                          Desactivar acceso al sistema temporalmente para mantenimiento
+                        </div>
+                      </div>
+                      <Switch 
+                        checked={systemSettings.maintenanceMode}
+                        onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, maintenanceMode: checked }))}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               <Button className="w-full sm:w-auto" onClick={saveSystemSettings}>
