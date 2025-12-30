@@ -14,9 +14,14 @@ import {
   PlusCircle,
   ArrowRight,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { TicketWithRelations, statusLabels, priorityLabels, TicketStatus } from '@/types/database';
 import { TopPerformers } from '@/components/dashboard/TopPerformers';
+import { TicketTrendsChart } from '@/components/dashboard/TicketTrendsChart';
+import { ResponseTimeChart } from '@/components/dashboard/ResponseTimeChart';
+import { SatisfactionChart } from '@/components/dashboard/SatisfactionChart';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface Stats {
   total: number;
@@ -31,6 +36,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats>({ total: 0, open: 0, inProgress: 0, resolved: 0, closed: 0 });
   const [recentTickets, setRecentTickets] = useState<TicketWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Initialize push notifications
+  usePushNotifications();
 
   useEffect(() => {
     fetchDashboardData();
@@ -137,15 +145,15 @@ export default function Dashboard() {
       <div className="hero-section text-primary-foreground">
         <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
-            <p className="text-primary-foreground/80 text-sm font-medium uppercase tracking-wider">
-              {isAdmin ? 'Panel de Administración' : isSupervisor ? 'Panel de Supervisión' : 'Panel de Soporte'}
-            </p>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary-foreground/80" />
+              <p className="text-primary-foreground/80 text-sm font-medium uppercase tracking-wider">
+                {isAdmin ? 'Panel de Administración' : isSupervisor ? 'Panel de Supervisión' : 'Panel de Soporte'}
+              </p>
+            </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
               Bienvenido/a, {profile?.full_name?.split(' ')[0] || 'Usuario'}
             </h1>
-            <p className="text-primary-foreground/70 text-sm sm:text-base max-w-md">
-              Gestiona tickets, revisa estadísticas y mantente al día con el sistema de soporte.
-            </p>
           </div>
           {!isSupervisor && (
             <Button 
@@ -187,6 +195,15 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Charts Section - Only for Admin and Supervisor */}
+      {(isAdmin || isSupervisor) && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <TicketTrendsChart />
+          <ResponseTimeChart />
+          <SatisfactionChart />
+        </div>
+      )}
 
       {/* Quick Actions & Recent Tickets */}
       <div className="grid gap-6 lg:grid-cols-3">

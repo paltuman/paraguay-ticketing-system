@@ -137,11 +137,16 @@ export default function TicketDetail() {
   }, [messages]);
 
   // Check if ticket is resolved or closed and show survey
+  // Show survey to creator OR to admin (to rate the user)
   useEffect(() => {
-    if ((ticket?.status === 'resolved' || ticket?.status === 'closed') && ticket.created_by === user?.id && !hasSurvey) {
-      setShowSurvey(true);
+    if ((ticket?.status === 'resolved' || ticket?.status === 'closed') && !hasSurvey) {
+      const isCreator = ticket.created_by === user?.id;
+      const isAssignedAdmin = isAdmin && ticket.assigned_to === user?.id;
+      if (isCreator || isAssignedAdmin) {
+        setShowSurvey(true);
+      }
     }
-  }, [ticket?.status, hasSurvey]);
+  }, [ticket?.status, hasSurvey, isAdmin]);
 
   const checkExistingSurvey = async () => {
     if (!id || !user) return;

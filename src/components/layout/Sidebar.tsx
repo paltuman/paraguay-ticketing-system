@@ -107,7 +107,6 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
           {isOpen && (
             <div className="flex flex-col animate-fade-in">
               <span className="text-sm font-bold text-sidebar-foreground tracking-tight">Sistema de Tickets</span>
-              <span className="text-[10px] text-sidebar-foreground/60 font-medium">PAI Paraguay</span>
             </div>
           )}
         </Link>
@@ -159,11 +158,9 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         {isOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
       </button>
 
-      {/* Footer */}
       <div className="border-t border-sidebar-border p-4">
         {isOpen ? (
           <div className="text-center animate-fade-in">
-            <p className="text-xs text-sidebar-foreground/60 font-medium">Subsistema de Información</p>
             <p className="text-[10px] text-sidebar-foreground/40 mt-0.5">v2.0.0</p>
           </div>
         ) : (
