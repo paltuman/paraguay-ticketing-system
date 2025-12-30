@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+// Dashboard with filters and export
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,12 +16,15 @@ import {
   ArrowRight,
   Loader2,
   Sparkles,
+  BarChart3,
 } from 'lucide-react';
 import { TicketWithRelations, statusLabels, priorityLabels, TicketStatus } from '@/types/database';
 import { TopPerformers } from '@/components/dashboard/TopPerformers';
 import { TicketTrendsChart } from '@/components/dashboard/TicketTrendsChart';
 import { ResponseTimeChart } from '@/components/dashboard/ResponseTimeChart';
 import { SatisfactionChart } from '@/components/dashboard/SatisfactionChart';
+import { DashboardFilters, defaultFilters, DashboardFiltersState } from '@/components/dashboard/DashboardFilters';
+import { DashboardExport } from '@/components/dashboard/DashboardExport';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface Stats {
@@ -36,21 +40,30 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats>({ total: 0, open: 0, inProgress: 0, resolved: 0, closed: 0 });
   const [recentTickets, setRecentTickets] = useState<TicketWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState<DashboardFiltersState>(defaultFilters);
+  const chartsRef = useRef<HTMLDivElement>(null);
   
-  // Initialize push notifications
   usePushNotifications();
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [filters]);
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      // Fetch stats
-      const { data: tickets, error } = await supabase
-        .from('tickets')
-        .select('status');
+      let query = supabase.from('tickets').select('status, department_id, assigned_to, created_at');
+
+      if (filters.departmentId) {
+        query = query.eq('department_id', filters.departmentId);
+      }
+      if (filters.agentId) {
+        query = query.eq('assigned_to', filters.agentId);
+      }
+      query = query.gte('created_at', filters.startDate.toISOString());
+      query = query.lte('created_at', filters.endDate.toISOString());
+
+      const { data: tickets, error } = await query;
 
       if (!error && tickets) {
         const statsData: Stats = {
@@ -63,7 +76,6 @@ export default function Dashboard() {
         setStats(statsData);
       }
 
-      // Fetch recent tickets
       const { data: recent, error: recentError } = await supabase
         .from('tickets')
         .select(`
@@ -94,41 +106,11 @@ export default function Dashboard() {
   };
 
   const statCards = [
-    {
-      title: 'Total Tickets',
-      value: stats.total,
-      icon: Ticket,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
-    },
-    {
-      title: 'Abiertos',
-      value: stats.open,
-      icon: AlertCircle,
-      color: 'text-status-open',
-      bgColor: 'bg-status-open/10',
-    },
-    {
-      title: 'En Proceso',
-      value: stats.inProgress,
-      icon: Clock,
-      color: 'text-status-in-progress',
-      bgColor: 'bg-status-in-progress/10',
-    },
-    {
-      title: 'Resueltos',
-      value: stats.resolved,
-      icon: CheckCircle2,
-      color: 'text-status-resolved',
-      bgColor: 'bg-status-resolved/10',
-    },
-    {
-      title: 'Cerrados',
-      value: stats.closed,
-      icon: CheckCircle2,
-      color: 'text-status-closed',
-      bgColor: 'bg-status-closed/10',
-    },
+    { title: 'Total Tickets', value: stats.total, icon: Ticket, color: 'text-primary', bgColor: 'bg-primary/10' },
+    { title: 'Abiertos', value: stats.open, icon: AlertCircle, color: 'text-status-open', bgColor: 'bg-status-open/10' },
+    { title: 'En Proceso', value: stats.inProgress, icon: Clock, color: 'text-status-in-progress', bgColor: 'bg-status-in-progress/10' },
+    { title: 'Resueltos', value: stats.resolved, icon: CheckCircle2, color: 'text-status-resolved', bgColor: 'bg-status-resolved/10' },
+    { title: 'Cerrados', value: stats.closed, icon: CheckCircle2, color: 'text-status-closed', bgColor: 'bg-status-closed/10' },
   ];
 
   if (isLoading) {
@@ -141,7 +123,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
+      {/* Hero Section */}
       <div className="hero-section text-primary-foreground">
         <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
@@ -155,34 +137,38 @@ export default function Dashboard() {
               Bienvenido/a, {profile?.full_name?.split(' ')[0] || 'Usuario'}
             </h1>
           </div>
-          {!isSupervisor && (
-            <Button 
-              asChild 
-              size="lg" 
-              className="w-full sm:w-auto bg-primary-foreground text-primary hover:bg-primary-foreground/90 btn-glow"
-            >
-              <Link to="/tickets/new">
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Crear Nuevo Ticket
-              </Link>
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {(isAdmin || isSupervisor) && (
+              <DashboardExport chartsRef={chartsRef} filters={filters} stats={stats} />
+            )}
+            {!isSupervisor && (
+              <Button 
+                asChild 
+                size="lg" 
+                className="w-full sm:w-auto bg-primary-foreground text-primary hover:bg-primary-foreground/90 btn-glow"
+              >
+                <Link to="/tickets/new">
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Crear Nuevo Ticket
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
-        
-        {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-64 h-64 opacity-10">
           <div className="absolute inset-0 bg-primary-foreground rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
         </div>
       </div>
 
+      {/* Filters for Admin */}
+      {(isAdmin || isSupervisor) && (
+        <DashboardFilters filters={filters} onFiltersChange={setFilters} />
+      )}
+
       {/* Stats Cards */}
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         {statCards.map((stat, index) => (
-          <Card 
-            key={stat.title} 
-            className="stat-card group"
-            style={{ animationDelay: `${index * 50}ms` }}
-          >
+          <Card key={stat.title} className="stat-card group" style={{ animationDelay: `${index * 50}ms` }}>
             <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
               <div className={`rounded-xl p-2.5 sm:p-3 ${stat.bgColor} transition-transform duration-300 group-hover:scale-110`}>
                 <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color}`} />
@@ -196,18 +182,23 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Charts Section - Only for Admin and Supervisor */}
+      {/* Charts Section */}
       {(isAdmin || isSupervisor) && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <TicketTrendsChart />
-          <ResponseTimeChart />
-          <SatisfactionChart />
+        <div ref={chartsRef} className="space-y-4">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Análisis y Métricas</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <TicketTrendsChart filters={filters} />
+            <ResponseTimeChart filters={filters} />
+            <SatisfactionChart filters={filters} />
+          </div>
         </div>
       )}
 
-      {/* Quick Actions & Recent Tickets */}
+      {/* Recent Tickets & Quick Stats */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recent Tickets */}
         <Card className="lg:col-span-2 card-modern">
           <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4">
             <div>
@@ -266,7 +257,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Quick Stats & Top Performers */}
         <div className="space-y-6">
           <Card className="card-modern">
             <CardHeader className="pb-4">
@@ -315,7 +305,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Top Performers - Only for Admin and Superadmin */}
           {(isAdmin || isSuperAdmin) && <TopPerformers />}
         </div>
       </div>
