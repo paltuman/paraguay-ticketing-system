@@ -3,8 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, Loader2 } from 'lucide-react';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -13,7 +11,7 @@ import {
   Area,
   AreaChart,
 } from 'recharts';
-import { format, subDays, startOfDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface TrendData {
@@ -22,25 +20,43 @@ interface TrendData {
   resolved: number;
 }
 
-export function TicketTrendsChart() {
+interface TicketTrendsChartProps {
+  filters?: {
+    departmentId: string | null;
+    agentId: string | null;
+    startDate: Date;
+    endDate: Date;
+  };
+}
+
+export function TicketTrendsChart({ filters }: TicketTrendsChartProps) {
   const [data, setData] = useState<TrendData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchTrendData();
-  }, []);
+  }, [filters]);
 
   const fetchTrendData = async () => {
     setIsLoading(true);
     
-    // Get last 14 days
-    const days = 14;
-    const startDate = subDays(new Date(), days);
+    const startDate = filters?.startDate || subDays(new Date(), 14);
+    const endDate = filters?.endDate || new Date();
     
-    const { data: tickets, error } = await supabase
+    let query = supabase
       .from('tickets')
-      .select('created_at, status, resolved_at')
-      .gte('created_at', startDate.toISOString());
+      .select('created_at, status, resolved_at, department_id, assigned_to')
+      .gte('created_at', startDate.toISOString())
+      .lte('created_at', endDate.toISOString());
+
+    if (filters?.departmentId) {
+      query = query.eq('department_id', filters.departmentId);
+    }
+    if (filters?.agentId) {
+      query = query.eq('assigned_to', filters.agentId);
+    }
+
+    const { data: tickets, error } = await query;
 
     if (error) {
       console.error('Error fetching trends:', error);
@@ -48,11 +64,11 @@ export function TicketTrendsChart() {
       return;
     }
 
-    // Group by day
+    const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const trendMap = new Map<string, { tickets: number; resolved: number }>();
     
-    for (let i = 0; i < days; i++) {
-      const date = format(subDays(new Date(), days - 1 - i), 'yyyy-MM-dd');
+    for (let i = 0; i <= daysDiff; i++) {
+      const date = format(new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
       trendMap.set(date, { tickets: 0, resolved: 0 });
     }
 
@@ -94,7 +110,6 @@ export function TicketTrendsChart() {
           <TrendingUp className="h-5 w-5 text-primary" />
           Tendencia de Tickets
         </CardTitle>
-        <span className="text-xs text-muted-foreground">Últimos 14 días</span>
       </CardHeader>
       <CardContent className="pt-0">
         {isLoading ? (

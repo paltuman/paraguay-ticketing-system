@@ -8,7 +8,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from 'recharts';
 
 interface SatisfactionData {
@@ -17,7 +16,16 @@ interface SatisfactionData {
   color: string;
 }
 
-export function SatisfactionChart() {
+interface SatisfactionChartProps {
+  filters?: {
+    departmentId: string | null;
+    agentId: string | null;
+    startDate: Date;
+    endDate: Date;
+  };
+}
+
+export function SatisfactionChart({ filters }: SatisfactionChartProps) {
   const [data, setData] = useState<SatisfactionData[]>([]);
   const [avgRating, setAvgRating] = useState<number>(0);
   const [totalSurveys, setTotalSurveys] = useState<number>(0);
@@ -26,15 +34,24 @@ export function SatisfactionChart() {
 
   useEffect(() => {
     fetchSatisfactionData();
-  }, []);
+  }, [filters]);
 
   const fetchSatisfactionData = async () => {
     setIsLoading(true);
     
-    const { data: surveys, error } = await supabase
+    let query = supabase
       .from('satisfaction_surveys')
-      .select('rating, created_at')
+      .select('rating, created_at, ticket_id')
       .order('created_at', { ascending: false });
+
+    if (filters?.startDate) {
+      query = query.gte('created_at', filters.startDate.toISOString());
+    }
+    if (filters?.endDate) {
+      query = query.lte('created_at', filters.endDate.toISOString());
+    }
+
+    const { data: surveys, error } = await query;
 
     if (error) {
       console.error('Error fetching satisfaction:', error);
@@ -50,11 +67,9 @@ export function SatisfactionChart() {
 
     setTotalSurveys(surveys.length);
 
-    // Calculate average
     const avg = surveys.reduce((sum, s) => sum + s.rating, 0) / surveys.length;
     setAvgRating(Math.round(avg * 10) / 10);
 
-    // Calculate trend (compare last 30 days with previous 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const sixtyDaysAgo = new Date();
@@ -72,7 +87,6 @@ export function SatisfactionChart() {
       setTrend(Math.round((recentAvg - olderAvg) * 10) / 10);
     }
 
-    // Group by rating
     const ratingCounts = [0, 0, 0, 0, 0];
     surveys.forEach(s => {
       if (s.rating >= 1 && s.rating <= 5) {
@@ -119,7 +133,7 @@ export function SatisfactionChart() {
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Star className="h-5 w-5 text-yellow-500" />
-          Satisfacción del Cliente
+          Satisfacción
         </CardTitle>
         <div className="flex items-center gap-3">
           {trend !== 0 && (

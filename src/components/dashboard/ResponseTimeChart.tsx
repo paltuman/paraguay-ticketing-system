@@ -19,22 +19,46 @@ interface ResponseData {
   color: string;
 }
 
-export function ResponseTimeChart() {
+interface ResponseTimeChartProps {
+  filters?: {
+    departmentId: string | null;
+    agentId: string | null;
+    startDate: Date;
+    endDate: Date;
+  };
+}
+
+export function ResponseTimeChart({ filters }: ResponseTimeChartProps) {
   const [data, setData] = useState<ResponseData[]>([]);
   const [avgTime, setAvgTime] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchResponseData();
-  }, []);
+  }, [filters]);
 
   const fetchResponseData = async () => {
     setIsLoading(true);
     
-    const { data: tickets, error } = await supabase
+    let query = supabase
       .from('tickets')
-      .select('created_at, resolved_at')
+      .select('created_at, resolved_at, department_id, assigned_to')
       .not('resolved_at', 'is', null);
+
+    if (filters?.departmentId) {
+      query = query.eq('department_id', filters.departmentId);
+    }
+    if (filters?.agentId) {
+      query = query.eq('assigned_to', filters.agentId);
+    }
+    if (filters?.startDate) {
+      query = query.gte('created_at', filters.startDate.toISOString());
+    }
+    if (filters?.endDate) {
+      query = query.lte('created_at', filters.endDate.toISOString());
+    }
+
+    const { data: tickets, error } = await query;
 
     if (error) {
       console.error('Error fetching response times:', error);
@@ -42,20 +66,17 @@ export function ResponseTimeChart() {
       return;
     }
 
-    // Calculate response times
     const responseTimes = tickets?.map((ticket) => {
       const created = new Date(ticket.created_at).getTime();
       const resolved = new Date(ticket.resolved_at!).getTime();
-      return (resolved - created) / (1000 * 60 * 60); // Hours
+      return (resolved - created) / (1000 * 60 * 60);
     }) || [];
 
-    // Calculate average
     const avg = responseTimes.length > 0 
       ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length 
       : 0;
     setAvgTime(Math.round(avg * 10) / 10);
 
-    // Group by ranges
     const ranges = [
       { label: '< 1h', max: 1, color: 'hsl(var(--success))' },
       { label: '1-4h', max: 4, color: 'hsl(var(--primary))' },
