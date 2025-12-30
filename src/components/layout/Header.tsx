@@ -117,12 +117,12 @@ export function Header({ onMenuClick }: HeaderProps) {
   const primaryRole = isAdmin ? 'admin' : isSupervisor ? 'supervisor' : 'support_user';
 
   return (
-    <header className="flex h-16 items-center border-b border-border bg-card px-4 shadow-sm">
+    <header className="flex h-16 items-center border-b border-border/50 bg-card/80 backdrop-blur-xl px-4 shadow-sm sticky top-0 z-40">
       <Button
         variant="ghost"
         size="icon"
         onClick={onMenuClick}
-        className="lg:hidden"
+        className="lg:hidden hover:bg-accent/80 transition-colors"
       >
         <Menu className="h-5 w-5" />
       </Button>
@@ -130,17 +130,17 @@ export function Header({ onMenuClick }: HeaderProps) {
       {/* Spacer to push content to right */}
       <div className="flex-1" />
 
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         {/* Online Users - Only visible for Superadmin */}
         {isSuperAdmin && <OnlineUsersIndicator />}
 
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative hover:bg-accent/80 transition-colors">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground shadow-lg animate-pulse">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -220,16 +220,19 @@ export function Header({ onMenuClick }: HeaderProps) {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-3 px-2">
-              <Avatar className="h-8 w-8 border-2 border-primary/20">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-                  {profile?.full_name ? getInitials(profile.full_name) : 'U'}
-                </AvatarFallback>
-              </Avatar>
+            <Button variant="ghost" className="flex items-center gap-3 px-2 hover:bg-accent/80 transition-colors group">
+              <div className="relative">
+                <Avatar className="h-9 w-9 ring-2 ring-primary/20 transition-all group-hover:ring-primary/40">
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-xs font-semibold">
+                    {profile?.full_name ? getInitials(profile.full_name) : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-card" />
+              </div>
               <div className="hidden flex-col items-start md:flex">
                 <span className="text-sm font-medium">{profile?.full_name || 'Usuario'}</span>
-                <Badge variant="secondary" className="h-5 text-[10px]">
+                <Badge variant="secondary" className="h-5 text-[10px] font-medium">
                   {roleLabels[primaryRole]}
                 </Badge>
               </div>
