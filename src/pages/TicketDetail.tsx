@@ -109,26 +109,30 @@ export default function TicketDetail() {
       fetchMessages();
       fetchHistory();
       fetchAttachments();
-      subscribeToMessages();
+      const unsubMessages = subscribeToMessages();
+      const unsubTicket = subscribeToTicketChanges();
       trackPresence();
       fetchViewers();
-      subscribeToViewers();
+      const unsubViewers = subscribeToViewers();
       checkExistingSurvey();
       if (isAdmin) {
         fetchAdminUsers();
       }
-    }
 
-    return () => {
-      // Clean up presence when leaving
-      if (id && user) {
-        supabase
-          .from('ticket_viewers')
-          .delete()
-          .eq('ticket_id', id)
-          .eq('user_id', user.id);
-      }
-    };
+      return () => {
+        // Clean up presence when leaving
+        if (user) {
+          supabase
+            .from('ticket_viewers')
+            .delete()
+            .eq('ticket_id', id)
+            .eq('user_id', user.id);
+        }
+        if (typeof unsubMessages === 'function') unsubMessages();
+        if (typeof unsubTicket === 'function') unsubTicket();
+        if (typeof unsubViewers === 'function') unsubViewers();
+      };
+    }
   }, [id, isAdmin]);
 
   useEffect(() => {
@@ -368,6 +372,31 @@ export default function TicketDetail() {
               prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m)
             );
           }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  // Subscribe to ticket changes for real-time updates
+  const subscribeToTicketChanges = () => {
+    const channel = supabase
+      .channel(`ticket-updates-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tickets',
+          filter: `id=eq.${id}`,
+        },
+        (payload) => {
+          // Update ticket with new data
+          setTicket(prev => prev ? { ...prev, ...payload.new } : prev);
+          fetchHistory();
         }
       )
       .subscribe();
