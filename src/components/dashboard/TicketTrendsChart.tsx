@@ -20,22 +20,24 @@ interface TrendData {
   resolved: number;
 }
 
-interface TicketTrendsChartProps {
-  filters?: {
-    departmentId: string | null;
-    agentId: string | null;
-    startDate: Date;
-    endDate: Date;
-  };
+interface ChartFilters {
+  departmentId?: string | null;
+  agentId?: string | null;
+  startDate?: Date;
+  endDate?: Date;
 }
 
-export function TicketTrendsChart({ filters }: TicketTrendsChartProps) {
+interface Props {
+  filters?: ChartFilters;
+}
+
+export function TicketTrendsChart({ filters }: Props) {
   const [data, setData] = useState<TrendData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchTrendData();
-  }, [filters]);
+  }, [filters?.departmentId, filters?.startDate, filters?.endDate]);
 
   const fetchTrendData = async () => {
     setIsLoading(true);
@@ -51,9 +53,6 @@ export function TicketTrendsChart({ filters }: TicketTrendsChartProps) {
 
     if (filters?.departmentId) {
       query = query.eq('department_id', filters.departmentId);
-    }
-    if (filters?.agentId) {
-      query = query.eq('assigned_to', filters.agentId);
     }
 
     const { data: tickets, error } = await query;
@@ -77,7 +76,6 @@ export function TicketTrendsChart({ filters }: TicketTrendsChartProps) {
       if (trendMap.has(createdDate)) {
         const current = trendMap.get(createdDate)!;
         current.tickets++;
-        trendMap.set(createdDate, current);
       }
       
       if (ticket.resolved_at) {
@@ -85,7 +83,6 @@ export function TicketTrendsChart({ filters }: TicketTrendsChartProps) {
         if (trendMap.has(resolvedDate)) {
           const current = trendMap.get(resolvedDate)!;
           current.resolved++;
-          trendMap.set(resolvedDate, current);
         }
       }
     });

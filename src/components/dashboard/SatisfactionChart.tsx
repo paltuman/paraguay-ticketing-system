@@ -16,16 +16,18 @@ interface SatisfactionData {
   color: string;
 }
 
-interface SatisfactionChartProps {
-  filters?: {
-    departmentId: string | null;
-    agentId: string | null;
-    startDate: Date;
-    endDate: Date;
-  };
+interface ChartFilters {
+  departmentId?: string | null;
+  agentId?: string | null;
+  startDate?: Date;
+  endDate?: Date;
 }
 
-export function SatisfactionChart({ filters }: SatisfactionChartProps) {
+interface Props {
+  filters?: ChartFilters;
+}
+
+export function SatisfactionChart({ filters }: Props) {
   const [data, setData] = useState<SatisfactionData[]>([]);
   const [avgRating, setAvgRating] = useState<number>(0);
   const [totalSurveys, setTotalSurveys] = useState<number>(0);
@@ -34,14 +36,14 @@ export function SatisfactionChart({ filters }: SatisfactionChartProps) {
 
   useEffect(() => {
     fetchSatisfactionData();
-  }, [filters]);
+  }, [filters?.startDate, filters?.endDate]);
 
   const fetchSatisfactionData = async () => {
     setIsLoading(true);
     
     let query = supabase
       .from('satisfaction_surveys')
-      .select('rating, created_at, ticket_id')
+      .select('rating, created_at')
       .order('created_at', { ascending: false });
 
     if (filters?.startDate) {
@@ -66,7 +68,6 @@ export function SatisfactionChart({ filters }: SatisfactionChartProps) {
     }
 
     setTotalSurveys(surveys.length);
-
     const avg = surveys.reduce((sum, s) => sum + s.rating, 0) / surveys.length;
     setAvgRating(Math.round(avg * 10) / 10);
 
@@ -103,29 +104,15 @@ export function SatisfactionChart({ filters }: SatisfactionChartProps) {
     ];
 
     const chartData: SatisfactionData[] = [
-      { name: '⭐ 1', value: ratingCounts[0], color: colors[0] },
-      { name: '⭐ 2', value: ratingCounts[1], color: colors[1] },
-      { name: '⭐ 3', value: ratingCounts[2], color: colors[2] },
-      { name: '⭐ 4', value: ratingCounts[3], color: colors[3] },
-      { name: '⭐ 5', value: ratingCounts[4], color: colors[4] },
+      { name: '1 estrella', value: ratingCounts[0], color: colors[0] },
+      { name: '2 estrellas', value: ratingCounts[1], color: colors[1] },
+      { name: '3 estrellas', value: ratingCounts[2], color: colors[2] },
+      { name: '4 estrellas', value: ratingCounts[3], color: colors[3] },
+      { name: '5 estrellas', value: ratingCounts[4], color: colors[4] },
     ].filter(d => d.value > 0);
 
     setData(chartData);
     setIsLoading(false);
-  };
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-semibold">{payload[0].payload.name}</p>
-          <p className="text-sm text-muted-foreground">
-            {payload[0].value} encuestas ({Math.round((payload[0].value / totalSurveys) * 100)}%)
-          </p>
-        </div>
-      );
-    }
-    return null;
   };
 
   return (
@@ -175,26 +162,28 @@ export function SatisfactionChart({ filters }: SatisfactionChartProps) {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [`${value} encuestas`, name]}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex-1 space-y-2">
               {data.map((item, index) => (
                 <div key={index} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <div 
-                      className="h-3 w-3 rounded-full" 
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span>{item.name}</span>
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-xs">{item.name}</span>
                   </div>
-                  <span className="font-medium">{item.value}</span>
+                  <span className="font-medium text-xs">{item.value}</span>
                 </div>
               ))}
               <div className="pt-2 border-t border-border mt-2">
-                <p className="text-xs text-muted-foreground">
-                  Total: {totalSurveys} encuestas
-                </p>
+                <p className="text-xs text-muted-foreground">Total: {totalSurveys}</p>
               </div>
             </div>
           </div>
