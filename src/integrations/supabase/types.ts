@@ -200,6 +200,27 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       satisfaction_surveys: {
         Row: {
           comment: string | null
@@ -552,6 +573,16 @@ export type Database = {
       }
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_action: string
+          p_max_count: number
+          p_user_id: string
+          p_window_minutes: number
+        }
+        Returns: boolean
+      }
+      cleanup_old_audit_logs: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -571,6 +602,7 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      record_rate_limit: { Args: { p_action: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "support_user" | "supervisor" | "superadmin"
