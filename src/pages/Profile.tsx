@@ -15,11 +15,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { User, Mail, Building, Briefcase, Save, Loader2, Camera } from 'lucide-react';
+import { User, Mail, Building, Briefcase, Save, Loader2, Camera, HelpCircle } from 'lucide-react';
 import { roleLabels, Department } from '@/types/database';
+import { showTutorial } from '@/components/onboarding/SupportUserTutorial';
 
 export default function Profile() {
-  const { profile, roles, user } = useAuth();
+  const { profile, roles, user, isSupportUser, isAdmin, isSupervisor } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -155,6 +156,13 @@ export default function Profile() {
   };
 
   const currentDepartment = departments.find(d => d.id === departmentId);
+  const canShowTutorial = isSupportUser && !isAdmin && !isSupervisor;
+
+  const handleShowTutorial = () => {
+    if (user) {
+      showTutorial(user.id);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -211,6 +219,18 @@ export default function Profile() {
                   </Badge>
                 ))}
               </div>
+              
+              {canShowTutorial && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={handleShowTutorial}
+                >
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Ver tutorial
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
