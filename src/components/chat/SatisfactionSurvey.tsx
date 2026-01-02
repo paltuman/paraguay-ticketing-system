@@ -33,11 +33,21 @@ export function SatisfactionSurvey({ ticketId, onComplete }: SatisfactionSurveyP
     });
 
     if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudo enviar la encuesta',
-      });
+      // Check if it's a duplicate constraint error
+      if (error.code === '23505') {
+        toast({
+          variant: 'destructive',
+          title: 'Encuesta ya enviada',
+          description: 'Ya has enviado una encuesta para este ticket',
+        });
+        onComplete();
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudo enviar la encuesta',
+        });
+      }
     } else {
       toast({
         title: '¡Gracias!',

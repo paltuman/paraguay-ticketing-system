@@ -97,52 +97,84 @@
   }
 
   .dark {
-    --background: 215 50% 10%;
-    --foreground: 210 30% 95%;
+    /* Fondo más oscuro y profundo */
+    --background: 220 25% 7%;
+    --foreground: 210 20% 92%;
 
-    --card: 215 45% 14%;
-    --card-foreground: 210 30% 95%;
+    /* Cards con mejor contraste */
+    --card: 220 25% 11%;
+    --card-foreground: 210 20% 92%;
 
-    --popover: 215 45% 14%;
-    --popover-foreground: 210 30% 95%;
+    --popover: 220 25% 11%;
+    --popover-foreground: 210 20% 92%;
 
-    --primary: 211 84% 55%;
+    /* Azul primario más brillante en oscuro */
+    --primary: 211 90% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 40% 25%;
-    --secondary-foreground: 210 30% 95%;
+    /* Secundario con mejor visibilidad */
+    --secondary: 220 30% 18%;
+    --secondary-foreground: 210 20% 90%;
 
-    --muted: 215 40% 20%;
-    --muted-foreground: 215 20% 65%;
+    /* Muted más suave */
+    --muted: 220 25% 15%;
+    --muted-foreground: 215 15% 60%;
 
-    --accent: 215 45% 22%;
-    --accent-foreground: 211 84% 65%;
+    /* Accent más visible */
+    --accent: 220 35% 16%;
+    --accent-foreground: 211 90% 70%;
 
-    --destructive: 0 62% 45%;
+    /* Destructivo más vibrante */
+    --destructive: 0 65% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 61% 40%;
+    /* Success más visible */
+    --success: 145 65% 42%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 45 83% 42%;
-    --warning-foreground: 0 0% 100%;
+    /* Warning más visible */
+    --warning: 45 90% 50%;
+    --warning-foreground: 220 25% 10%;
 
-    --border: 215 35% 22%;
-    --input: 215 35% 22%;
-    --ring: 211 84% 55%;
+    /* Bordes más sutiles */
+    --border: 220 20% 18%;
+    --input: 220 25% 15%;
+    --ring: 211 90% 58%;
 
-    --sidebar-background: 215 50% 8%;
-    --sidebar-foreground: 210 30% 90%;
-    --sidebar-primary: 211 84% 55%;
+    /* Sidebar más oscura y elegante */
+    --sidebar-background: 220 30% 5%;
+    --sidebar-foreground: 210 15% 85%;
+    --sidebar-primary: 211 90% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 45% 15%;
-    --sidebar-accent-foreground: 210 30% 90%;
-    --sidebar-border: 215 40% 18%;
-    --sidebar-ring: 211 84% 55%;
+    --sidebar-accent: 220 30% 12%;
+    --sidebar-accent-foreground: 210 15% 85%;
+    --sidebar-border: 220 25% 14%;
+    --sidebar-ring: 211 90% 58%;
 
-    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(211 84% 55% / 0.1) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(205 85% 92% / 0.08) 0px, transparent 50%);
+    /* Status colors for dark mode */
+    --status-open: 211 90% 58%;
+    --status-in-progress: 45 90% 50%;
+    --status-resolved: 145 65% 42%;
+    --status-closed: 220 15% 50%;
+
+    --priority-low: 145 65% 42%;
+    --priority-medium: 45 90% 50%;
+    --priority-high: 25 95% 55%;
+    --priority-urgent: 0 65% 52%;
+
+    /* Gradientes para modo oscuro */
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(211 90% 58% / 0.08) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(211 90% 70% / 0.05) 0px, transparent 50%);
+    --gradient-primary: linear-gradient(135deg, hsl(211 90% 50%) 0%, hsl(220 50% 25%) 100%);
+    
+    /* Sombras más sutiles para modo oscuro */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 10px 25px -3px hsl(0 0% 0% / 0.5), 0 4px 6px -4px hsl(0 0% 0% / 0.4);
+    --shadow-xl: 0 20px 40px -8px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 30px hsl(211 90% 58% / 0.2);
+    --shadow-glass: 0 8px 32px 0 hsl(0 0% 0% / 0.4);
   }
 }
 
