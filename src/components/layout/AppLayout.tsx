@@ -7,6 +7,7 @@ import { Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { SupportUserTutorial } from '@/components/onboarding/SupportUserTutorial';
+import { GuidedTour } from '@/components/onboarding/GuidedTour';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className={`flex h-screen overflow-hidden bg-background ${isImpersonating ? 'pt-10' : ''}`}>
       <ImpersonationBanner />
       <SupportUserTutorial />
+      <GuidedTour />
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
