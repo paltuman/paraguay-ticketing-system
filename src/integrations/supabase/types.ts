@@ -583,6 +583,22 @@ export type Database = {
         Returns: boolean
       }
       cleanup_old_audit_logs: { Args: never; Returns: undefined }
+      get_message_sender_info: {
+        Args: { p_sender_id: string; p_ticket_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+        }[]
+      }
+      get_ticket_participant_info: {
+        Args: { p_ticket_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
