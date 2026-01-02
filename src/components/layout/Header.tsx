@@ -163,7 +163,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative hover:bg-accent/80 transition-colors">
+              <Button variant="ghost" size="icon" className="relative hover:bg-accent/80 transition-colors" data-tour="notifications">
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
                   <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground shadow-lg animate-pulse">
@@ -247,7 +247,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-3 px-2 hover:bg-accent/80 transition-colors group">
+            <Button variant="ghost" className="flex items-center gap-3 px-2 hover:bg-accent/80 transition-colors group" data-tour="user-menu">
               <div className="relative">
                 <Avatar className="h-9 w-9 ring-2 ring-primary/20 transition-all group-hover:ring-primary/40">
                   <AvatarImage src={profile?.avatar_url || undefined} />

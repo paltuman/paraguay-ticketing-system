@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { User, Mail, Building, Briefcase, Save, Loader2, Camera, HelpCircle } from 'lucide-react';
 import { roleLabels, Department } from '@/types/database';
 import { showTutorial } from '@/components/onboarding/SupportUserTutorial';
+import { startGuidedTour } from '@/components/onboarding/GuidedTour';
 
 export default function Profile() {
   const { profile, roles, user, isSupportUser, isAdmin, isSupervisor } = useAuth();
@@ -164,6 +165,12 @@ export default function Profile() {
     }
   };
 
+  const handleStartTour = () => {
+    if (user) {
+      startGuidedTour(user.id);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -221,15 +228,24 @@ export default function Profile() {
               </div>
               
               {canShowTutorial && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={handleShowTutorial}
-                >
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Ver tutorial
-                </Button>
+                <div className="flex flex-col gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleStartTour}
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Tour guiado
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShowTutorial}
+                    className="text-muted-foreground"
+                  >
+                    Ver tutorial completo
+                  </Button>
+                </div>
               )}
             </div>
           </CardContent>

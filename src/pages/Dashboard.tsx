@@ -189,7 +189,7 @@ export default function Dashboard() {
                 description="Usa este botón para crear una solicitud de soporte. Describe tu problema y el equipo de TI te ayudará."
                 position="bottom"
               >
-                <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">
+                <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5" data-tour="create-ticket">
                   <Link to="/tickets/new">
                     <PlusCircle className="mr-2 h-5 w-5" />
                     Crear Nuevo Ticket
@@ -243,7 +243,7 @@ export default function Dashboard() {
         description="Aquí puedes ver un resumen rápido del estado de tus tickets: cuántos están abiertos, en proceso o resueltos."
         position="bottom"
       >
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" data-tour="stats-cards">
           {statCards.map((stat, index) => (
             <Card key={stat.title} className="stat-card group hover:shadow-xl transition-all duration-500" style={{ animationDelay: `${index * 80}ms` }}>
               <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
@@ -279,7 +279,7 @@ export default function Dashboard() {
 
       {/* Recent Tickets & Quick Stats */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 glass-card border-0 shadow-lg hover:shadow-xl transition-shadow duration-500">
+        <Card className="lg:col-span-2 glass-card border-0 shadow-lg hover:shadow-xl transition-shadow duration-500" data-tour="recent-tickets">
         <HelpIndicator
           id="recent-tickets"
           title="Tickets Recientes"
