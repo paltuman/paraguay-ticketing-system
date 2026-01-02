@@ -307,9 +307,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Check for superadmin by email or role
-  const isSuperAdminByEmail = profile?.email === 'subsistema.pai@mspbs.gov.py';
-  const isSuperAdmin = roles.includes('superadmin') || isSuperAdminByEmail;
+  // Check roles from database only - no hardcoded email bypasses
+  const isSuperAdmin = roles.includes('superadmin');
   const isAdmin = roles.includes('admin') || isSuperAdmin;
   const isSupervisor = roles.includes('supervisor');
   const isSupportUser = roles.includes('support_user');
