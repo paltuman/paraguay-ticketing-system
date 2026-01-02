@@ -21,6 +21,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { HelpIndicator } from '@/components/onboarding/HelpIndicator';
 interface Notification {
   id: string;
   title: string;
@@ -154,17 +155,23 @@ export function Header({ onMenuClick }: HeaderProps) {
         {isSuperAdmin && <OnlineUsersIndicator />}
 
         {/* Notifications */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative hover:bg-accent/80 transition-colors">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground shadow-lg animate-pulse">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
+        <HelpIndicator
+          id="notifications-bell"
+          title="Centro de Notificaciones"
+          description="Aquí verás alertas cuando haya cambios en tus tickets o cuando el equipo de soporte te responda."
+          position="bottom"
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative hover:bg-accent/80 transition-colors">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground shadow-lg animate-pulse">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel className="flex items-center justify-between">
               <span>Notificaciones</span>
@@ -235,6 +242,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             </ScrollArea>
           </DropdownMenuContent>
         </DropdownMenu>
+      </HelpIndicator>
 
         {/* User Menu */}
         <DropdownMenu>
