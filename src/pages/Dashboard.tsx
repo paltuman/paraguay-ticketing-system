@@ -27,6 +27,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { subDays } from 'date-fns';
 import { toast } from 'sonner';
+import { HelpIndicator } from '@/components/onboarding/HelpIndicator';
 
 interface Stats {
   total: number;
@@ -182,12 +183,19 @@ export default function Dashboard() {
               </Button>
             )}
             {!isSupervisor && (
-              <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">
-                <Link to="/tickets/new">
-                  <PlusCircle className="mr-2 h-5 w-5" />
-                  Crear Nuevo Ticket
-                </Link>
-              </Button>
+              <HelpIndicator
+                id="create-ticket-btn"
+                title="Crear Nuevo Ticket"
+                description="Usa este botón para crear una solicitud de soporte. Describe tu problema y el equipo de TI te ayudará."
+                position="bottom"
+              >
+                <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">
+                  <Link to="/tickets/new">
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    Crear Nuevo Ticket
+                  </Link>
+                </Button>
+              </HelpIndicator>
             )}
           </div>
         </div>
@@ -229,21 +237,28 @@ export default function Dashboard() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-        {statCards.map((stat, index) => (
-          <Card key={stat.title} className="stat-card group hover:shadow-xl transition-all duration-500" style={{ animationDelay: `${index * 80}ms` }}>
-            <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
-              <div className={`rounded-xl p-2.5 sm:p-3 ${stat.bgColor} transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg`}>
-                <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color} transition-transform duration-300`} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">{stat.title}</p>
-                <p className="text-xl sm:text-2xl font-bold tabular-nums">{stat.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <HelpIndicator
+        id="stats-cards"
+        title="Resumen de Tickets"
+        description="Aquí puedes ver un resumen rápido del estado de tus tickets: cuántos están abiertos, en proceso o resueltos."
+        position="bottom"
+      >
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+          {statCards.map((stat, index) => (
+            <Card key={stat.title} className="stat-card group hover:shadow-xl transition-all duration-500" style={{ animationDelay: `${index * 80}ms` }}>
+              <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5">
+                <div className={`rounded-xl p-2.5 sm:p-3 ${stat.bgColor} transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg`}>
+                  <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color} transition-transform duration-300`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">{stat.title}</p>
+                  <p className="text-xl sm:text-2xl font-bold tabular-nums">{stat.value}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </HelpIndicator>
 
       {/* Charts Section */}
       {(isAdmin || isSupervisor) && (
@@ -265,6 +280,12 @@ export default function Dashboard() {
       {/* Recent Tickets & Quick Stats */}
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2 glass-card border-0 shadow-lg hover:shadow-xl transition-shadow duration-500">
+        <HelpIndicator
+          id="recent-tickets"
+          title="Tickets Recientes"
+          description="Lista de los últimos tickets creados. Haz clic en cualquiera para ver sus detalles y usar el chat."
+          position="left"
+        >
           <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4">
             <div>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -282,6 +303,7 @@ export default function Dashboard() {
               </Link>
             </Button>
           </CardHeader>
+        </HelpIndicator>
           <CardContent className="px-4 sm:px-6">
             <div className="space-y-3">
               {recentTickets.length === 0 ? (
