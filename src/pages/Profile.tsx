@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { User, Mail, Building, Briefcase, Save, Loader2, Camera, HelpCircle } from 'lucide-react';
 import { roleLabels, Department } from '@/types/database';
-import { showTutorial } from '@/components/onboarding/SupportUserTutorial';
+import { startGuidedTour } from '@/components/onboarding/GuidedTour';
 
 export default function Profile() {
   const { profile, roles, user, isSupportUser, isAdmin, isSupervisor } = useAuth();
@@ -158,9 +158,9 @@ export default function Profile() {
   const currentDepartment = departments.find(d => d.id === departmentId);
   const canShowTutorial = isSupportUser && !isAdmin && !isSupervisor;
 
-  const handleShowTutorial = () => {
+  const handleStartTour = () => {
     if (user) {
-      showTutorial(user.id);
+      startGuidedTour(user.id);
     }
   };
 
@@ -224,11 +224,11 @@ export default function Profile() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleShowTutorial}
+                  onClick={handleStartTour}
                   className="mt-4"
                 >
                   <HelpCircle className="h-4 w-4 mr-2" />
-                  Ver tutorial
+                  Ver visita guiada
                 </Button>
               )}
             </div>
