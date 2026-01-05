@@ -20,7 +20,15 @@ export function usePushNotifications() {
 
   useEffect(() => {
     // Check if push notifications are supported
-    const isSupported = 'Notification' in window && 'serviceWorker' in navigator;
+    const isSupported = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
+    
+    console.log('Push notifications support check:', {
+      Notification: 'Notification' in window,
+      serviceWorker: 'serviceWorker' in navigator,
+      PushManager: 'PushManager' in window,
+      isSupported
+    });
+    
     setState(prev => ({
       ...prev,
       isSupported,
@@ -29,11 +37,17 @@ export function usePushNotifications() {
 
     // Register service worker
     if (isSupported && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
         .then(registration => {
-          console.log('Service Worker registered:', registration.scope);
+          console.log('Service Worker registered successfully:', registration.scope);
+          // Check if there's an active service worker
+          if (registration.active) {
+            console.log('Service Worker is active');
+          }
         })
-        .catch(err => console.error('Service Worker registration failed:', err));
+        .catch(err => {
+          console.error('Service Worker registration failed:', err);
+        });
     }
   }, []);
 
@@ -72,8 +86,10 @@ export function usePushNotifications() {
   }, [state.isSupported, toast]);
 
   const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
+    console.log('Attempting to send notification:', title, 'Permission:', state.permission);
+    
     if (state.permission !== 'granted') {
-      console.log('Notification permission not granted');
+      console.log('Notification permission not granted, current state:', state.permission);
       return;
     }
 
@@ -85,15 +101,16 @@ export function usePushNotifications() {
         if (parsed.enableNotificationSound) {
           const audio = new Audio('/notification.mp3');
           audio.volume = 0.5;
-          audio.play().catch(() => {});
+          audio.play().catch((err) => console.log('Could not play notification sound:', err));
         }
       } catch (e) {
         // Ignore JSON parse errors
       }
     }
 
-    // Show notification directly with the Notification API for better compatibility
+    // Show notification directly with the Notification API
     try {
+      console.log('Creating notification...');
       const notification = new Notification(title, {
         ...options,
         icon: options?.icon || '/favicon.ico',
@@ -101,16 +118,29 @@ export function usePushNotifications() {
       });
 
       notification.onclick = () => {
+        console.log('Notification clicked');
         window.focus();
         notification.close();
       };
+      
+      notification.onerror = (err) => {
+        console.error('Notification error:', err);
+      };
+      
+      console.log('Notification created successfully');
     } catch (error) {
+      console.error('Direct notification failed, trying service worker:', error);
       // Fallback to service worker if direct notification fails
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'SHOW_NOTIFICATION',
-          title,
-          options,
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(title, {
+            ...options,
+            icon: options?.icon || '/favicon.ico',
+            badge: '/favicon.ico',
+          });
+          console.log('Notification sent via Service Worker');
+        }).catch((err) => {
+          console.error('Service Worker notification failed:', err);
         });
       }
     }
