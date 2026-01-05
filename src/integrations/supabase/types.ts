@@ -617,7 +617,7 @@ export type Database = {
         Returns: string
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
-      is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      is_superadmin: { Args: { _user_id?: string }; Returns: boolean }
       record_rate_limit: { Args: { p_action: string }; Returns: undefined }
     }
     Enums: {
