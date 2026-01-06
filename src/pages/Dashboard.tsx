@@ -23,7 +23,6 @@ import { TopPerformers } from '@/components/dashboard/TopPerformers';
 import { TicketTrendsChart } from '@/components/dashboard/TicketTrendsChart';
 import { ResponseTimeChart } from '@/components/dashboard/ResponseTimeChart';
 import { SatisfactionChart } from '@/components/dashboard/SatisfactionChart';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { subDays } from 'date-fns';
 import { toast } from 'sonner';
@@ -51,8 +50,6 @@ export default function Dashboard() {
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('14d');
   const chartsRef = useRef<HTMLDivElement>(null);
-  
-  usePushNotifications();
 
   useEffect(() => {
     fetchDepartments();

@@ -52,7 +52,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
-import { Loader2, Search, Users as UsersIcon, Shield, UserCog, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, Eye, Crown } from 'lucide-react';
+import { Loader2, Search, Users as UsersIcon, Shield, UserCog, MoreHorizontal, KeyRound, UserX, UserCheck, Trash2, Eye, Crown, RotateCcw } from 'lucide-react';
+import { TOUR_STORAGE_KEY } from '@/components/onboarding/GuidedTour';
 import { Profile, AppRole, roleLabels, Department } from '@/types/database';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -532,6 +533,24 @@ export default function Users() {
                                 </>
                               )}
                             </DropdownMenuItem>
+                            
+                            {/* Reset guided tour for user */}
+                            {isAdmin && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  // Remove the tour completion flag for this user
+                                  localStorage.removeItem(`${TOUR_STORAGE_KEY}_${user.id}`);
+                                  toast({
+                                    title: 'Visita guiada reiniciada',
+                                    description: `La próxima vez que ${user.full_name} inicie sesión, verá la visita guiada`,
+                                  });
+                                }}
+                                className="text-primary"
+                              >
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                Reiniciar visita guiada
+                              </DropdownMenuItem>
+                            )}
                             
                             {/* Superadmin can delete users */}
                             {isSuperAdmin && (
