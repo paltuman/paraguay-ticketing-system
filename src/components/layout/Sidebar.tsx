@@ -79,6 +79,8 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const location = useLocation();
   const { roles, isAdmin, isSupervisor, isSupportUser } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -88,6 +90,23 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Handle mobile sidebar animation
+  useEffect(() => {
+    if (isMobile) {
+      if (isOpen) {
+        setShowMobileSidebar(true);
+        setIsAnimating(true);
+      } else if (showMobileSidebar) {
+        setIsAnimating(true);
+        const timer = setTimeout(() => {
+          setShowMobileSidebar(false);
+          setIsAnimating(false);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isOpen, isMobile]);
 
   // Cerrar sidebar automáticamente en móvil cuando se navega
   useEffect(() => {
@@ -116,25 +135,29 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               src={logo}
               alt="Logo"
               className={cn(
-                'rounded-full bg-white p-0.5 transition-all duration-300 ring-2 ring-sidebar-primary/20 group-hover:ring-sidebar-primary/50', 
-                isOpen ? 'h-10 w-10' : 'h-11 w-11'
+                'rounded-full bg-white p-0.5 ring-2 ring-sidebar-primary/20 group-hover:ring-sidebar-primary/50',
+                'transition-all duration-300 ease-out',
+                isOpen || isMobile ? 'h-10 w-10' : 'h-11 w-11'
               )}
             />
-            <div className="absolute inset-0 rounded-full bg-sidebar-primary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 rounded-full bg-sidebar-primary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
-          {isOpen && (
-            <div className="flex flex-col animate-fade-in">
-              <span className="text-sm font-bold text-sidebar-foreground tracking-tight">Sistema de Tickets</span>
-            </div>
-          )}
+          <div className={cn(
+            'flex flex-col overflow-hidden transition-all duration-300 ease-out',
+            isOpen || isMobile ? 'w-auto opacity-100' : 'w-0 opacity-0'
+          )}>
+            <span className="text-sm font-bold text-sidebar-foreground tracking-tight whitespace-nowrap">
+              Sistema de Tickets
+            </span>
+          </div>
         </Link>
         {/* Close button for mobile */}
-        {isMobile && isOpen && (
+        {isMobile && (
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent"
+            className="text-sidebar-foreground hover:bg-sidebar-accent transition-transform duration-200 hover:scale-105"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -143,7 +166,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1.5 p-3 overflow-y-auto scrollbar-thin">
-        {filteredNavItems.map((item) => {
+        {filteredNavItems.map((item, index) => {
           const isActive = location.pathname === item.href || 
             (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
           const Icon = item.icon;
@@ -153,25 +176,39 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               key={item.href}
               to={item.href}
               data-tour={item.tourId}
+              style={{ animationDelay: isMobile && isOpen ? `${index * 50}ms` : '0ms' }}
               className={cn(
-                'group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
+                'group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium',
+                'transition-all duration-200 ease-out',
                 isActive
                   ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-lg'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                !isOpen && !isMobile && 'justify-center px-2'
+                !isOpen && !isMobile && 'justify-center px-2',
+                isMobile && isOpen && 'animate-slide-in-right'
               )}
             >
               {isActive && (
-                <div className="absolute inset-0 rounded-xl bg-sidebar-primary/20 blur-md" />
+                <div className="absolute inset-0 rounded-xl bg-sidebar-primary/20 blur-md transition-opacity duration-300" />
               )}
-              <Icon className={cn('relative h-5 w-5 flex-shrink-0 transition-transform duration-200', 
+              <Icon className={cn(
+                'relative h-5 w-5 flex-shrink-0 transition-transform duration-200', 
                 isActive ? 'scale-110' : 'group-hover:scale-110'
               )} />
-              {(isOpen || isMobile) && <span className="relative truncate">{item.label}</span>}
+              <span className={cn(
+                'relative truncate transition-all duration-300 ease-out',
+                isOpen || isMobile ? 'w-auto opacity-100' : 'w-0 opacity-0 absolute'
+              )}>
+                {item.label}
+              </span>
               
               {/* Tooltip for collapsed state (desktop only) */}
               {!isOpen && !isMobile && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground rounded-lg text-xs font-medium opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap shadow-lg z-50">
+                <div className={cn(
+                  'absolute left-full ml-2 px-2.5 py-1.5 bg-popover text-popover-foreground rounded-lg text-xs font-medium',
+                  'opacity-0 invisible group-hover:opacity-100 group-hover:visible',
+                  'transition-all duration-200 ease-out whitespace-nowrap shadow-lg z-50',
+                  'translate-x-1 group-hover:translate-x-0'
+                )}>
                   {item.label}
                 </div>
               )}
@@ -184,18 +221,28 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       {!isMobile && (
         <button
           onClick={onToggle}
-          className="absolute -right-3 top-20 flex h-7 w-7 items-center justify-center rounded-full border border-sidebar-border bg-card text-foreground shadow-lg transition-all duration-200 hover:bg-accent hover:scale-110 z-10"
+          className={cn(
+            'absolute -right-3 top-20 flex h-7 w-7 items-center justify-center rounded-full',
+            'border border-sidebar-border bg-card text-foreground shadow-lg z-10',
+            'transition-all duration-300 ease-out hover:bg-accent hover:scale-110',
+            'hover:shadow-xl active:scale-95'
+          )}
         >
-          {isOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <ChevronLeft className={cn(
+            'h-4 w-4 transition-transform duration-300',
+            !isOpen && 'rotate-180'
+          )} />
         </button>
       )}
 
       <div className="border-t border-sidebar-border p-4">
-        {isOpen || isMobile ? (
-          <div className="text-center animate-fade-in">
-            <p className="text-[10px] text-sidebar-foreground/40 mt-0.5">v2.0.0</p>
-          </div>
-        ) : (
+        <div className={cn(
+          'text-center transition-all duration-300',
+          isOpen || isMobile ? 'opacity-100' : 'opacity-0'
+        )}>
+          <p className="text-[10px] text-sidebar-foreground/40">v2.0.0</p>
+        </div>
+        {!isOpen && !isMobile && (
           <div className="flex justify-center">
             <div className="h-2 w-2 rounded-full bg-success animate-pulse" title="Sistema activo" />
           </div>
@@ -204,23 +251,26 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     </>
   );
 
-  // Mobile: Full overlay sidebar
+  // Mobile: Full overlay sidebar with smooth animations
   if (isMobile) {
+    if (!showMobileSidebar && !isOpen) return null;
+
     return (
       <>
-        {/* Backdrop */}
-        {isOpen && (
-          <div 
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
-            onClick={onToggle}
-          />
-        )}
+        {/* Backdrop with blur animation */}
+        <div 
+          className={cn(
+            'fixed inset-0 z-40 bg-black/50 lg:hidden',
+            isOpen ? 'animate-backdrop-in' : 'animate-backdrop-out'
+          )}
+          onClick={onToggle}
+        />
         
-        {/* Sidebar */}
+        {/* Sidebar with slide animation */}
         <aside
           className={cn(
-            'fixed inset-y-0 left-0 z-50 flex h-full w-72 flex-col bg-sidebar transition-transform duration-300 ease-in-out lg:hidden',
-            isOpen ? 'translate-x-0' : '-translate-x-full'
+            'fixed inset-y-0 left-0 z-50 flex h-full w-72 flex-col bg-sidebar shadow-2xl lg:hidden',
+            isOpen ? 'animate-slide-in-left' : 'animate-slide-out-left'
           )}
         >
           {sidebarContent}
@@ -229,11 +279,12 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     );
   }
 
-  // Desktop: Standard sidebar
+  // Desktop: Standard sidebar with smooth width transition
   return (
     <aside
       className={cn(
-        'relative hidden lg:flex h-full flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out',
+        'relative hidden lg:flex h-full flex-col border-r border-sidebar-border bg-sidebar',
+        'transition-[width] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
         isOpen ? 'w-64' : 'w-20'
       )}
     >

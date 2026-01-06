@@ -105,6 +105,10 @@ export default {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        "fade-out": {
+          from: { opacity: "1" },
+          to: { opacity: "0" },
+        },
         "slide-up": {
           from: { opacity: "0", transform: "translateY(10px)" },
           to: { opacity: "1", transform: "translateY(0)" },
@@ -113,18 +117,59 @@ export default {
           from: { opacity: "0", transform: "translateX(10px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
+        "slide-in-left": {
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(0)" },
+        },
+        "slide-out-left": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-100%)" },
+        },
+        "backdrop-in": {
+          from: { opacity: "0", backdropFilter: "blur(0px)" },
+          to: { opacity: "1", backdropFilter: "blur(4px)" },
+        },
+        "backdrop-out": {
+          from: { opacity: "1", backdropFilter: "blur(4px)" },
+          to: { opacity: "0", backdropFilter: "blur(0px)" },
+        },
         "pulse-soft": {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
+        },
+        "progress-fill": {
+          from: { width: "0%" },
+          to: { width: "var(--progress-width)" },
+        },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.95)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        "expand-width": {
+          from: { width: "5rem" },
+          to: { width: "16rem" },
+        },
+        "collapse-width": {
+          from: { width: "16rem" },
+          to: { width: "5rem" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.3s ease-out",
+        "fade-in": "fade-in 0.3s ease-out forwards",
+        "fade-out": "fade-out 0.3s ease-out forwards",
         "slide-up": "slide-up 0.4s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
+        "slide-in-left": "slide-in-left 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-out-left": "slide-out-left 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "backdrop-in": "backdrop-in 0.3s ease-out forwards",
+        "backdrop-out": "backdrop-out 0.25s ease-in forwards",
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
+        "progress-fill": "progress-fill 0.5s ease-out forwards",
+        "scale-in": "scale-in 0.2s ease-out",
+        "expand-width": "expand-width 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "collapse-width": "collapse-width 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },
