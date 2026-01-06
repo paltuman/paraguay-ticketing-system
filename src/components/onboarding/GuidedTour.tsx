@@ -2,53 +2,74 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowRight, ArrowLeft, X, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, Sparkles, Home, Ticket, MessageCircle, Bell, User, Settings, BarChart3, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createPortal } from 'react-dom';
 
 interface TourStep {
-  target: string; // CSS selector
+  target: string;
   title: string;
   description: string;
   position: 'top' | 'bottom' | 'left' | 'right';
+  icon?: React.ReactNode;
 }
 
 const tourSteps: TourStep[] = [
   {
     target: '[data-tour="create-ticket"]',
-    title: '📝 Crear Nuevo Ticket',
-    description: 'Haz clic aquí para crear una nueva solicitud de soporte. Describe tu problema y el equipo de TI te ayudará.',
+    title: 'Crear Nuevo Ticket',
+    description: 'Haz clic aquí para crear una nueva solicitud de soporte. Describe tu problema detalladamente y el equipo de TI te ayudará lo antes posible.',
     position: 'bottom',
+    icon: <Ticket className="h-5 w-5" />,
   },
   {
     target: '[data-tour="stats-cards"]',
-    title: '📊 Resumen de Tickets',
-    description: 'Aquí ves el estado de tus tickets: cuántos están abiertos, en proceso, resueltos o cerrados.',
+    title: 'Resumen de Estados',
+    description: 'Visualiza el estado de todos tus tickets: cuántos están abiertos esperando atención, en proceso de resolución, resueltos o cerrados.',
     position: 'bottom',
+    icon: <BarChart3 className="h-5 w-5" />,
   },
   {
     target: '[data-tour="recent-tickets"]',
-    title: '📋 Tickets Recientes',
-    description: 'Lista de tus últimos tickets. Haz clic en cualquiera para ver detalles y chatear con soporte.',
+    title: 'Tickets Recientes',
+    description: 'Lista de tus últimos tickets creados. Haz clic en cualquiera para ver los detalles completos, el historial y chatear directamente con el equipo de soporte.',
     position: 'top',
+    icon: <MessageCircle className="h-5 w-5" />,
   },
   {
     target: '[data-tour="notifications"]',
-    title: '🔔 Notificaciones',
-    description: 'Te avisamos cuando haya respuestas o cambios en tus tickets. ¡No te pierdas ninguna actualización!',
+    title: 'Centro de Notificaciones',
+    description: 'Recibe alertas instantáneas cuando haya respuestas o cambios en tus tickets. El número rojo indica notificaciones sin leer. ¡No te pierdas ninguna actualización importante!',
     position: 'bottom',
+    icon: <Bell className="h-5 w-5" />,
   },
   {
     target: '[data-tour="user-menu"]',
-    title: '👤 Tu Perfil',
-    description: 'Accede a tu perfil, actualiza tu información personal y cierra sesión desde aquí.',
+    title: 'Tu Perfil de Usuario',
+    description: 'Accede a tu información personal, actualiza tu foto de perfil, cambia tu contraseña y cierra sesión de forma segura desde este menú.',
     position: 'bottom',
+    icon: <User className="h-5 w-5" />,
   },
   {
     target: '[data-tour="sidebar-tickets"]',
-    title: '🎫 Mis Tickets',
-    description: 'Ve a esta sección para ver todos tus tickets con filtros y búsqueda avanzada.',
+    title: 'Mis Tickets',
+    description: 'Navega a esta sección para ver el listado completo de todos tus tickets con filtros avanzados por estado, fecha y búsqueda por palabras clave.',
     position: 'right',
+    icon: <Ticket className="h-5 w-5" />,
+  },
+  {
+    target: '[data-tour="sidebar-dashboard"]',
+    title: 'Panel Principal',
+    description: 'El Dashboard es tu página de inicio. Aquí encontrarás un resumen rápido de toda tu actividad y accesos directos a las funciones más usadas.',
+    position: 'right',
+    icon: <Home className="h-5 w-5" />,
+  },
+  {
+    target: '[data-tour="theme-toggle"]',
+    title: 'Modo Oscuro/Claro',
+    description: 'Personaliza la apariencia del sistema. Puedes cambiar entre modo claro y oscuro según tu preferencia para mayor comodidad visual.',
+    position: 'bottom',
+    icon: <Settings className="h-5 w-5" />,
   },
 ];
 
@@ -71,23 +92,26 @@ export function GuidedTour() {
       const rect = element.getBoundingClientRect();
       setTargetRect(rect);
       setIsVisible(true);
-      
-      // Scroll element into view if needed
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
-      setIsVisible(false);
+      // Si el elemento no existe, pasar al siguiente paso
+      if (currentStep < tourSteps.length - 1) {
+        setCurrentStep(prev => prev + 1);
+      } else {
+        completeTour();
+      }
     }
   }, [isActive, currentStep]);
 
   useEffect(() => {
-    // Only show for support users (not admins or supervisors)
+    // Solo mostrar para usuarios de soporte (no admins ni supervisores)
     if (!user || !isSupportUser || isAdmin || isSupervisor) return;
 
-    // Check if tour was already completed for this user
+    // Verificar si el tour ya fue completado para este usuario
     const completed = localStorage.getItem(`${TOUR_COMPLETED_KEY}_${user.id}`);
-    if (completed) return; // Don't show if already completed
+    if (completed) return;
 
-    // Start tour after a short delay on first login
+    // Iniciar tour después de un breve retraso en el primer inicio de sesión
     const timer = setTimeout(() => setIsActive(true), 1500);
     return () => clearTimeout(timer);
   }, [user, isSupportUser, isAdmin, isSupervisor]);
@@ -96,7 +120,6 @@ export function GuidedTour() {
     if (isActive) {
       updateTargetPosition();
       
-      // Update position on scroll/resize
       window.addEventListener('scroll', updateTargetPosition, true);
       window.addEventListener('resize', updateTargetPosition);
       
@@ -109,7 +132,6 @@ export function GuidedTour() {
 
   const completeTour = () => {
     if (user) {
-      // Mark as completed permanently for this user
       localStorage.setItem(`${TOUR_COMPLETED_KEY}_${user.id}`, 'true');
     }
     setIsActive(false);
@@ -139,11 +161,10 @@ export function GuidedTour() {
   const step = tourSteps[currentStep];
   const isLastStep = currentStep === tourSteps.length - 1;
   
-  // Calculate tooltip position
   const getTooltipStyle = (): React.CSSProperties => {
     const padding = 16;
-    const tooltipWidth = 320;
-    const tooltipHeight = 180;
+    const tooltipWidth = Math.min(340, window.innerWidth - 32);
+    const tooltipHeight = 220;
     
     let top = 0;
     let left = 0;
@@ -167,7 +188,6 @@ export function GuidedTour() {
         break;
     }
     
-    // Keep tooltip within viewport
     left = Math.max(16, Math.min(left, window.innerWidth - tooltipWidth - 16));
     top = Math.max(16, Math.min(top, window.innerHeight - tooltipHeight - 16));
     
@@ -180,33 +200,16 @@ export function GuidedTour() {
     };
   };
 
-  // Calculate arrow position
   const getArrowStyle = (): React.CSSProperties => {
     switch (step.position) {
       case 'top':
-        return {
-          bottom: '-6px',
-          left: '50%',
-          transform: 'translateX(-50%) rotate(45deg)',
-        };
+        return { bottom: '-6px', left: '50%', transform: 'translateX(-50%) rotate(45deg)' };
       case 'bottom':
-        return {
-          top: '-6px',
-          left: '50%',
-          transform: 'translateX(-50%) rotate(45deg)',
-        };
+        return { top: '-6px', left: '50%', transform: 'translateX(-50%) rotate(45deg)' };
       case 'left':
-        return {
-          right: '-6px',
-          top: '50%',
-          transform: 'translateY(-50%) rotate(45deg)',
-        };
+        return { right: '-6px', top: '50%', transform: 'translateY(-50%) rotate(45deg)' };
       case 'right':
-        return {
-          left: '-6px',
-          top: '50%',
-          transform: 'translateY(-50%) rotate(45deg)',
-        };
+        return { left: '-6px', top: '50%', transform: 'translateY(-50%) rotate(45deg)' };
     }
   };
 
@@ -215,11 +218,11 @@ export function GuidedTour() {
       {/* Overlay */}
       <div 
         className="fixed inset-0 z-[9999] transition-opacity duration-300"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
         onClick={handleSkip}
       />
       
-      {/* Spotlight on target */}
+      {/* Spotlight */}
       <div
         className="fixed z-[10000] transition-all duration-300 rounded-lg ring-4 ring-primary ring-offset-2 ring-offset-transparent"
         style={{
@@ -227,7 +230,7 @@ export function GuidedTour() {
           left: targetRect.left - 4,
           width: targetRect.width + 8,
           height: targetRect.height + 8,
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7)',
           pointerEvents: 'none',
         }}
       />
@@ -252,24 +255,22 @@ export function GuidedTour() {
         )}
         style={getTooltipStyle()}
       >
-        {/* Arrow */}
-        <div 
-          className="absolute w-3 h-3 bg-primary"
-          style={getArrowStyle()}
-        />
+        <div className="absolute w-3 h-3 bg-primary" style={getArrowStyle()} />
         
         {/* Header */}
         <div className="bg-gradient-to-r from-primary to-secondary p-4 text-primary-foreground">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-xs font-medium">
+              <div className="p-1.5 rounded-lg bg-white/20">
+                {step.icon || <HelpCircle className="h-4 w-4" />}
+              </div>
+              <span className="text-xs font-medium opacity-90">
                 Paso {currentStep + 1} de {tourSteps.length}
               </span>
             </div>
             <button
               onClick={handleSkip}
-              className="p-1 rounded-full hover:bg-white/20 transition-colors"
+              className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
@@ -289,19 +290,19 @@ export function GuidedTour() {
               <div
                 key={index}
                 className={cn(
-                  "w-2 h-2 rounded-full transition-all",
+                  "h-2 rounded-full transition-all",
                   index === currentStep
                     ? "w-6 bg-primary"
                     : index < currentStep
-                    ? "bg-primary/60"
-                    : "bg-muted-foreground/30"
+                    ? "w-2 bg-primary/60"
+                    : "w-2 bg-muted-foreground/30"
                 )}
               />
             ))}
           </div>
           
           {/* Navigation */}
-          <div className="flex items-center justify-between pt-2 border-t">
+          <div className="flex items-center justify-between pt-3 border-t">
             <Button
               variant="ghost"
               size="sm"
@@ -321,7 +322,7 @@ export function GuidedTour() {
               <Button size="sm" onClick={handleNext}>
                 {isLastStep ? (
                   <>
-                    ¡Entendido!
+                    ¡Listo!
                     <Sparkles className="h-3 w-3 ml-1" />
                   </>
                 ) : (
@@ -340,8 +341,16 @@ export function GuidedTour() {
   );
 }
 
-// Export function to manually start tour (for profile page)
+// Export function to manually start tour
 export function startGuidedTour(userId: string) {
   localStorage.removeItem(`${TOUR_COMPLETED_KEY}_${userId}`);
   window.location.reload();
 }
+
+// Export function to reset tour for a specific user (for admin use)
+export function resetGuidedTourForUser(userId: string) {
+  // This is a placeholder - the actual reset happens server-side or via admin action
+  return `${TOUR_COMPLETED_KEY}_${userId}`;
+}
+
+export const TOUR_STORAGE_KEY = TOUR_COMPLETED_KEY;

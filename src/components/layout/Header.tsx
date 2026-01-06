@@ -13,15 +13,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Menu, LogOut, User, Bell, Check, CheckCheck, BellRing } from 'lucide-react';
+import { Menu, LogOut, User, Bell, Check, CheckCheck } from 'lucide-react';
 import { OnlineUsersIndicator } from './OnlineUsersIndicator';
 import { ThemeToggle } from './ThemeToggle';
 import { roleLabels } from '@/types/database';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { HelpIndicator } from '@/components/onboarding/HelpIndicator';
+
 interface Notification {
   id: string;
   title: string;
@@ -40,7 +40,6 @@ export function Header({ onMenuClick }: HeaderProps) {
   const { profile, roles, signOut, isAdmin, isSupervisor, isSuperAdmin, user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { permission, requestPermission, isSupported } = usePushNotifications();
 
   useEffect(() => {
     if (user) {
@@ -131,25 +130,14 @@ export function Header({ onMenuClick }: HeaderProps) {
         <Menu className="h-5 w-5" />
       </Button>
 
-      {/* Spacer to push content to right */}
+      {/* Spacer */}
       <div className="flex-1" />
 
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Push Notification Permission */}
-        {isSupported && permission !== 'granted' && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={requestPermission}
-            className="relative hover:bg-accent/80 transition-colors"
-            title="Activar notificaciones push"
-          >
-            <BellRing className="h-5 w-5 text-muted-foreground" />
-          </Button>
-        )}
-
         {/* Theme Toggle */}
-        <ThemeToggle />
+        <div data-tour="theme-toggle">
+          <ThemeToggle />
+        </div>
 
         {/* Online Users - Only visible for Superadmin */}
         {isSuperAdmin && <OnlineUsersIndicator />}
@@ -172,77 +160,77 @@ export function Header({ onMenuClick }: HeaderProps) {
                 )}
               </Button>
             </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
-              <span>Notificaciones</span>
-              {unreadCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto p-1 text-xs"
-                  onClick={markAllAsRead}
-                >
-                  <CheckCheck className="h-3 w-3 mr-1" />
-                  Marcar todas
-                </Button>
-              )}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <ScrollArea className="h-[300px]">
-              {notifications.length === 0 ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">
-                  No hay notificaciones
-                </div>
-              ) : (
-                notifications.map((notification) => (
-                  <DropdownMenuItem
-                    key={notification.id}
-                    className={`flex flex-col items-start gap-1 p-3 cursor-pointer ${
-                      !notification.is_read ? 'bg-primary/5' : ''
-                    }`}
-                    onClick={() => {
-                      if (!notification.is_read) markAsRead(notification.id);
-                    }}
-                    asChild={notification.ticket_id ? true : false}
+            <DropdownMenuContent align="end" className="w-80">
+              <DropdownMenuLabel className="flex items-center justify-between">
+                <span>Notificaciones</span>
+                {unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto p-1 text-xs"
+                    onClick={markAllAsRead}
                   >
-                    {notification.ticket_id ? (
-                      <Link to={`/tickets/${notification.ticket_id}`}>
-                        <div className="flex items-start justify-between w-full">
-                          <p className="font-medium text-sm">{notification.title}</p>
-                          {!notification.is_read && (
-                            <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {notification.message}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: es })}
-                        </p>
-                      </Link>
-                    ) : (
-                      <>
-                        <div className="flex items-start justify-between w-full">
-                          <p className="font-medium text-sm">{notification.title}</p>
-                          {!notification.is_read && (
-                            <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {notification.message}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: es })}
-                        </p>
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                ))
-              )}
-            </ScrollArea>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </HelpIndicator>
+                    <CheckCheck className="h-3 w-3 mr-1" />
+                    Marcar todas
+                  </Button>
+                )}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <ScrollArea className="h-[300px]">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No hay notificaciones
+                  </div>
+                ) : (
+                  notifications.map((notification) => (
+                    <DropdownMenuItem
+                      key={notification.id}
+                      className={`flex flex-col items-start gap-1 p-3 cursor-pointer ${
+                        !notification.is_read ? 'bg-primary/5' : ''
+                      }`}
+                      onClick={() => {
+                        if (!notification.is_read) markAsRead(notification.id);
+                      }}
+                      asChild={notification.ticket_id ? true : false}
+                    >
+                      {notification.ticket_id ? (
+                        <Link to={`/tickets/${notification.ticket_id}`}>
+                          <div className="flex items-start justify-between w-full">
+                            <p className="font-medium text-sm">{notification.title}</p>
+                            {!notification.is_read && (
+                              <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {notification.message}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: es })}
+                          </p>
+                        </Link>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between w-full">
+                            <p className="font-medium text-sm">{notification.title}</p>
+                            {!notification.is_read && (
+                              <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {notification.message}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: es })}
+                          </p>
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </ScrollArea>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </HelpIndicator>
 
         {/* User Menu */}
         <DropdownMenu>
