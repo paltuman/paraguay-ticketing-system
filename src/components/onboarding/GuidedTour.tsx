@@ -3,14 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowRight, ArrowLeft, X, Sparkles, Home, Ticket, MessageCircle, Bell, User, Settings, BarChart3, HelpCircle, CheckCircle2, Hand } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X, Sparkles, Home, Ticket, MessageCircle, Bell, User, Settings, BarChart3, HelpCircle, CheckCircle2, Hand, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createPortal } from 'react-dom';
 
 interface TourStep {
   target: string;
   title: string;
-  description: string;
+  shortDescription: string;
+  fullDescription: string;
   position: 'top' | 'bottom' | 'left' | 'right';
   icon?: React.ReactNode;
 }
@@ -18,57 +19,65 @@ interface TourStep {
 const tourSteps: TourStep[] = [
   {
     target: '[data-tour="create-ticket"]',
-    title: 'Crear Nuevo Ticket',
-    description: 'Haz clic aquí para crear una nueva solicitud de soporte. Describe tu problema detalladamente y el equipo de TI te ayudará lo antes posible.',
+    title: 'Crear Ticket',
+    shortDescription: 'Crea una nueva solicitud de soporte.',
+    fullDescription: 'Haz clic aquí para crear una nueva solicitud de soporte. Describe tu problema detalladamente y el equipo de TI te ayudará lo antes posible.',
     position: 'bottom',
     icon: <Ticket className="h-5 w-5" />,
   },
   {
     target: '[data-tour="stats-cards"]',
-    title: 'Resumen de Estados',
-    description: 'Visualiza el estado de todos tus tickets: cuántos están abiertos esperando atención, en proceso de resolución, resueltos o cerrados.',
+    title: 'Resumen',
+    shortDescription: 'Estado de todos tus tickets.',
+    fullDescription: 'Visualiza el estado de todos tus tickets: cuántos están abiertos esperando atención, en proceso de resolución, resueltos o cerrados.',
     position: 'bottom',
     icon: <BarChart3 className="h-5 w-5" />,
   },
   {
     target: '[data-tour="recent-tickets"]',
     title: 'Tickets Recientes',
-    description: 'Lista de tus últimos tickets creados. Haz clic en cualquiera para ver los detalles completos, el historial y chatear directamente con el equipo de soporte.',
+    shortDescription: 'Tus últimos tickets creados.',
+    fullDescription: 'Lista de tus últimos tickets creados. Haz clic en cualquiera para ver los detalles completos, el historial y chatear directamente con el equipo de soporte.',
     position: 'top',
     icon: <MessageCircle className="h-5 w-5" />,
   },
   {
     target: '[data-tour="notifications"]',
-    title: 'Centro de Notificaciones',
-    description: 'Recibe alertas instantáneas cuando haya respuestas o cambios en tus tickets. El número rojo indica notificaciones sin leer. ¡No te pierdas ninguna actualización importante!',
+    title: 'Notificaciones',
+    shortDescription: 'Alertas de respuestas y cambios.',
+    fullDescription: 'Recibe alertas instantáneas cuando haya respuestas o cambios en tus tickets. El número rojo indica notificaciones sin leer.',
     position: 'bottom',
     icon: <Bell className="h-5 w-5" />,
   },
   {
     target: '[data-tour="user-menu"]',
-    title: 'Tu Perfil de Usuario',
-    description: 'Accede a tu información personal, actualiza tu foto de perfil, cambia tu contraseña y cierra sesión de forma segura desde este menú.',
+    title: 'Tu Perfil',
+    shortDescription: 'Tu información personal.',
+    fullDescription: 'Accede a tu información personal, actualiza tu foto de perfil, cambia tu contraseña y cierra sesión de forma segura desde este menú.',
     position: 'bottom',
     icon: <User className="h-5 w-5" />,
   },
   {
     target: '[data-tour="sidebar-tickets"]',
     title: 'Mis Tickets',
-    description: 'Navega a esta sección para ver el listado completo de todos tus tickets con filtros avanzados por estado, fecha y búsqueda por palabras clave.',
+    shortDescription: 'Ver todos tus tickets.',
+    fullDescription: 'Navega a esta sección para ver el listado completo de todos tus tickets con filtros avanzados por estado, fecha y búsqueda.',
     position: 'right',
     icon: <Ticket className="h-5 w-5" />,
   },
   {
     target: '[data-tour="sidebar-dashboard"]',
-    title: 'Panel Principal',
-    description: 'El Dashboard es tu página de inicio. Aquí encontrarás un resumen rápido de toda tu actividad y accesos directos a las funciones más usadas.',
+    title: 'Dashboard',
+    shortDescription: 'Tu página de inicio.',
+    fullDescription: 'El Dashboard es tu página de inicio. Aquí encontrarás un resumen rápido de toda tu actividad y accesos directos a las funciones más usadas.',
     position: 'right',
     icon: <Home className="h-5 w-5" />,
   },
   {
     target: '[data-tour="theme-toggle"]',
-    title: 'Modo Oscuro/Claro',
-    description: 'Personaliza la apariencia del sistema. Puedes cambiar entre modo claro y oscuro según tu preferencia para mayor comodidad visual.',
+    title: 'Tema',
+    shortDescription: 'Cambia modo claro/oscuro.',
+    fullDescription: 'Personaliza la apariencia del sistema. Puedes cambiar entre modo claro y oscuro según tu preferencia para mayor comodidad visual.',
     position: 'bottom',
     icon: <Settings className="h-5 w-5" />,
   },
@@ -125,6 +134,7 @@ export function GuidedTour() {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   // Touch/Swipe handling
   const touchStartX = useRef<number>(0);
@@ -405,59 +415,84 @@ export function GuidedTour() {
           style={getArrowStyle()} 
         />
         
-        {/* Header - Vibrant gradient */}
-        <div className="bg-gradient-to-br from-primary via-primary to-secondary p-5 text-primary-foreground relative overflow-hidden">
-          {/* Background pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full blur-3xl transform translate-x-16 -translate-y-16" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full blur-2xl transform -translate-x-12 translate-y-12" />
-          </div>
-          
+        {/* Header - Compact for mobile */}
+        <div className="bg-gradient-to-br from-primary via-primary to-secondary p-3 sm:p-4 text-primary-foreground relative overflow-hidden">
           <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm shadow-lg">
-                {step.icon || <HelpCircle className="h-5 w-5" />}
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-white/20">
+                {step.icon || <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5" />}
               </div>
-              <span className="text-sm font-medium opacity-90">
-                Paso {currentStep + 1} de {tourSteps.length}
-              </span>
+              <div>
+                <h3 className="text-base sm:text-lg font-bold">{step.title}</h3>
+                <span className="text-xs opacity-80">
+                  {currentStep + 1}/{tourSteps.length}
+                </span>
+              </div>
             </div>
             <button
               onClick={handleSkip}
-              className="p-2 rounded-full hover:bg-white/20 transition-all duration-200 hover:scale-110"
+              className="p-1.5 rounded-full hover:bg-white/20 transition-all"
               aria-label="Cerrar tour"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
-          <h3 className="text-xl font-bold mt-3 relative z-10">{step.title}</h3>
         </div>
         
-        {/* Content */}
-        <div className="p-5 bg-background">
-          <p className="text-sm text-foreground leading-relaxed min-h-[48px]">
-            {step.description}
+        {/* Content - Compact for mobile with expand option */}
+        <div className="p-4 sm:p-5 bg-background">
+          {/* Short description always visible */}
+          <p className="text-sm text-foreground font-medium">
+            {step.shortDescription}
           </p>
           
-          {/* Swipe hint on mobile */}
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-3 sm:hidden">
-            <Hand className="h-3.5 w-3.5" />
-            <span>Desliza para navegar</span>
+          {/* Expandable full description */}
+          <div className={cn(
+            "overflow-hidden transition-all duration-300",
+            isExpanded ? "max-h-40 mt-2" : "max-h-0"
+          )}>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              {step.fullDescription}
+            </p>
           </div>
           
-          {/* Interactive Step Indicators */}
-          <div className="flex justify-center gap-1.5 mt-4 mb-4">
+          {/* Expand/Collapse button */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-1 text-xs text-primary mt-2 hover:underline"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="h-3 w-3" />
+                Ver menos
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3 w-3" />
+                Ver más detalles
+              </>
+            )}
+          </button>
+          
+          {/* Swipe hint on mobile */}
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-2 sm:hidden">
+            <Hand className="h-3 w-3" />
+            <span>Desliza ← →</span>
+          </div>
+          
+          {/* Compact Step Indicators */}
+          <div className="flex justify-center gap-1 mt-3 mb-3">
             {tourSteps.map((s, index) => (
               <button
                 key={index}
                 onClick={() => handleJumpToStep(index)}
                 className={cn(
-                  "h-3 rounded-full transition-all duration-300 ease-out hover:scale-125",
+                  "h-2 rounded-full transition-all duration-300",
                   index === currentStep
-                    ? "w-10 bg-primary shadow-lg shadow-primary/40"
+                    ? "w-6 bg-primary"
                     : index < currentStep
-                    ? "w-3 bg-primary/70 hover:bg-primary"
-                    : "w-3 bg-muted hover:bg-muted-foreground/50"
+                    ? "w-2 bg-primary/60"
+                    : "w-2 bg-muted"
                 )}
                 title={s.title}
                 aria-label={`Ir al paso ${index + 1}: ${s.title}`}
@@ -465,42 +500,44 @@ export function GuidedTour() {
             ))}
           </div>
           
-          {/* Navigation */}
-          <div className="flex items-center justify-between pt-4 border-t border-border">
+          {/* Navigation - Compact for mobile */}
+          <div className="flex items-center justify-between pt-3 border-t border-border">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleSkip}
-              className="text-muted-foreground text-sm hover:text-foreground transition-colors"
+              className="text-muted-foreground text-xs sm:text-sm hover:text-foreground transition-colors px-2 sm:px-3"
             >
               Saltar
             </Button>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               {currentStep > 0 && (
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={handlePrev}
-                  className="transition-all duration-200 hover:scale-105"
+                  className="transition-all duration-200 px-2 sm:px-3"
                 >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Anterior
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-1">Anterior</span>
                 </Button>
               )}
               <Button 
                 size="sm" 
                 onClick={handleNext}
-                className="transition-all duration-200 hover:scale-105 hover:shadow-lg bg-primary hover:bg-primary/90"
+                className="transition-all duration-200 bg-primary hover:bg-primary/90 px-3 sm:px-4"
               >
                 {isLastStep ? (
                   <>
-                    ¡Completar!
+                    <span className="hidden sm:inline">¡Completar!</span>
+                    <span className="sm:hidden">Fin</span>
                     <Sparkles className="h-4 w-4 ml-1" />
                   </>
                 ) : (
                   <>
-                    Siguiente
+                    <span className="hidden sm:inline">Siguiente</span>
+                    <span className="sm:hidden">Sig.</span>
                     <ArrowRight className="h-4 w-4 ml-1" />
                   </>
                 )}
