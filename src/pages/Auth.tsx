@@ -24,7 +24,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, ShieldCheck, Building2, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
-import logo from '@/assets/logo-pai.png';
+import logo from '@/assets/Logo_Subsistema.png';
 import { Department } from '@/types/database';
 
 const loginSchema = z.object({
@@ -233,15 +233,17 @@ export default function Auth() {
         </div>
         
         <div className="animate-slide-up text-center relative z-10">
-          <div className="mx-auto mb-10 h-44 w-44 rounded-full bg-white p-4 shadow-glow flex items-center justify-center">
-            <img src={logo} alt="PAI Paraguay" className="h-36 w-36 object-contain" />
+          <div className="mx-auto mb-10 h-52 w-52 rounded-full bg-white/95 p-3 shadow-glow flex items-center justify-center backdrop-blur-sm">
+            <img src={logo} alt="Subsistema de Información" className="h-44 w-44 object-contain" />
           </div>
-          <h1 className="mb-2 text-4xl font-bold tracking-tight">Programa Ampliado de Inmunizaciones</h1>
-          <p className="mb-12 text-xl opacity-90">Sistema de Gestión de Tickets</p>
+          <h1 className="mb-2 text-4xl font-bold tracking-tight">Subsistema de Información</h1>
+          <p className="mb-4 text-xl opacity-90">Sistema de Gestión de Tickets</p>
+          <p className="text-base opacity-75">Programa Ampliado de Inmunizaciones - PAI Paraguay</p>
         </div>
-        <p className="absolute bottom-8 text-sm opacity-60">
-          Subsistema de Información
-        </p>
+        <div className="absolute bottom-8 text-center">
+          <p className="text-sm opacity-60">Departamento de Información</p>
+          <p className="text-xs opacity-40 mt-1">© {new Date().getFullYear()} Ministerio de Salud Pública</p>
+        </div>
       </div>
 
       {/* Right Side - Auth Forms */}

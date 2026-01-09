@@ -7,6 +7,7 @@ import { Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { GuidedTour } from '@/components/onboarding/GuidedTour';
+import logo from '@/assets/Logo_Subsistema.png';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -44,8 +45,17 @@ export function AppLayout({ children }: AppLayoutProps) {
             {children}
           </div>
         </main>
-        <footer className="border-t border-border bg-card px-4 py-3 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Subsistema de Información - PAI Paraguay. Todos los derechos reservados.
+        <footer className="border-t border-border bg-card/50 backdrop-blur-sm px-4 py-3">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <img src={logo} alt="Subsistema de Información" className="h-6 w-6 rounded-full" />
+              <span className="font-medium">Subsistema de Información</span>
+            </div>
+            <span className="hidden sm:inline">•</span>
+            <span>Programa Ampliado de Inmunizaciones - PAI Paraguay</span>
+            <span className="hidden sm:inline">•</span>
+            <span>© {new Date().getFullYear()} Todos los derechos reservados</span>
+          </div>
         </footer>
       </div>
     </div>
