@@ -479,41 +479,57 @@
     50% { opacity: 0.7; }
   }
 
-  /* Logo entrance animation for login */
-  @keyframes logoEntrance {
+  /* Particle animation for login background */
+  @keyframes particle {
     0% {
+      transform: translateY(0) translateX(0) scale(1);
       opacity: 0;
-      transform: scale(0.3) rotate(-10deg);
     }
-    50% {
-      opacity: 1;
-      transform: scale(1.1) rotate(3deg);
+    10% {
+      opacity: 0.6;
     }
-    70% {
-      transform: scale(0.95) rotate(-2deg);
+    90% {
+      opacity: 0.6;
     }
     100% {
+      transform: translateY(-100vh) translateX(50px) scale(0.5);
+      opacity: 0;
+    }
+  }
+
+  @keyframes sparkle {
+    0%, 100% {
+      opacity: 0;
+      transform: scale(0) rotate(0deg);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1) rotate(180deg);
+    }
+  }
+
+  .animate-particle {
+    animation: particle 15s linear infinite;
+  }
+
+  .animate-sparkle {
+    animation: sparkle 3s ease-in-out infinite;
+  }
+
+  /* Tab transition animations */
+  @keyframes tabEnter {
+    from {
+      opacity: 0;
+      transform: translateX(10px);
+    }
+    to {
       opacity: 1;
-      transform: scale(1) rotate(0deg);
+      transform: translateX(0);
     }
   }
 
-  @keyframes logoFloat {
-    0%, 100% { 
-      transform: translateY(0) scale(1);
-    }
-    50% { 
-      transform: translateY(-8px) scale(1.02);
-    }
-  }
-
-  .animate-logo-entrance {
-    animation: logoEntrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  }
-
-  .animate-logo-float {
-    animation: logoFloat 4s ease-in-out infinite;
-    animation-delay: 0.8s;
+  .animate-tab-enter {
+    animation: tabEnter 0.3s ease-out forwards;
   }
 
   /* Estilos para scrollbar personalizado */
