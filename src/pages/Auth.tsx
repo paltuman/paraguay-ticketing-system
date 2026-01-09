@@ -232,17 +232,22 @@ export default function Auth() {
           <div className="absolute bottom-20 right-20 w-48 h-48 rounded-full bg-white blur-3xl" />
         </div>
         
-        <div className="animate-slide-up text-center relative z-10">
-          <div className="mx-auto mb-10 h-52 w-52 rounded-full bg-white/95 p-3 shadow-glow flex items-center justify-center backdrop-blur-sm">
-            <img src={logo} alt="Subsistema de Información" className="h-44 w-44 object-contain" />
+        <div className="text-center relative z-10">
+          <div className="mx-auto mb-10 h-56 w-56 rounded-full bg-white/95 p-3 shadow-glow flex items-center justify-center backdrop-blur-sm animate-logo-entrance">
+            <img 
+              src={logo} 
+              alt="Programa Ampliado de Inmunizaciones" 
+              className="h-48 w-48 object-contain animate-logo-float" 
+            />
           </div>
-          <h1 className="mb-2 text-4xl font-bold tracking-tight">Subsistema de Información</h1>
-          <p className="mb-4 text-xl opacity-90">Sistema de Gestión de Tickets</p>
-          <p className="text-base opacity-75">Programa Ampliado de Inmunizaciones - PAI Paraguay</p>
+          <div className="animate-fade-in" style={{ animationDelay: '0.6s', animationFillMode: 'backwards' }}>
+            <h1 className="mb-3 text-4xl font-bold tracking-tight">Programa Ampliado de Inmunizaciones</h1>
+            <p className="text-xl opacity-90">Sistema de Gestión de Tickets</p>
+          </div>
         </div>
-        <div className="absolute bottom-8 text-center">
-          <p className="text-sm opacity-60">Departamento de Información</p>
-          <p className="text-xs opacity-40 mt-1">© {new Date().getFullYear()} Ministerio de Salud Pública</p>
+        <div className="absolute bottom-8 text-center animate-fade-in" style={{ animationDelay: '1s', animationFillMode: 'backwards' }}>
+          <p className="text-sm opacity-60 mb-1">Departamento de Información</p>
+          <p className="text-xs opacity-40">© {new Date().getFullYear()}</p>
         </div>
       </div>
 

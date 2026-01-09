@@ -129,25 +129,31 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     <>
       {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-        <Link to="/dashboard" className="flex items-center gap-3 group flex-1">
-          <div className="relative">
+        <Link to="/dashboard" className="flex items-center gap-3 group flex-1 min-w-0">
+          <div className={cn(
+            'relative flex-shrink-0 transition-all duration-300 ease-out',
+            !isOpen && !isMobile && 'mx-auto'
+          )}>
             <img
               src={logo}
-              alt="Logo"
+              alt="PAI"
               className={cn(
-                'rounded-full bg-white p-0.5 ring-2 ring-sidebar-primary/20 group-hover:ring-sidebar-primary/50',
-                'transition-all duration-300 ease-out',
-                isOpen || isMobile ? 'h-10 w-10' : 'h-11 w-11'
+                'rounded-full bg-white ring-2 ring-sidebar-primary/20 group-hover:ring-sidebar-primary/50',
+                'transition-all duration-300 ease-out object-contain',
+                isOpen || isMobile ? 'h-10 w-10 p-0.5' : 'h-12 w-12 p-1'
               )}
             />
             <div className="absolute inset-0 rounded-full bg-sidebar-primary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
           <div className={cn(
-            'flex flex-col overflow-hidden transition-all duration-300 ease-out',
+            'flex flex-col overflow-hidden transition-all duration-300 ease-out min-w-0',
             isOpen || isMobile ? 'w-auto opacity-100' : 'w-0 opacity-0'
           )}>
-            <span className="text-sm font-bold text-sidebar-foreground tracking-tight whitespace-nowrap">
+            <span className="text-xs font-bold text-sidebar-foreground tracking-tight truncate">
               Sistema de Tickets
+            </span>
+            <span className="text-[10px] text-sidebar-foreground/60 truncate">
+              PAI Paraguay
             </span>
           </div>
         </Link>
