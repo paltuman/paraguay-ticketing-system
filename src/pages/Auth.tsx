@@ -22,7 +22,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, User, ShieldCheck, Building2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Building2, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
+import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { z } from 'zod';
 import logo from '@/assets/Logo_Subsistema.png';
 import { Department } from '@/types/database';
@@ -425,12 +426,18 @@ export default function Auth() {
                         placeholder="Juan Pérez"
                         value={signupFullName}
                         onChange={(e) => setSignupFullName(e.target.value)}
-                        className="pl-10"
+                        className={`pl-10 pr-10 ${signupFullName.length >= 2 ? 'border-green-500 focus-visible:ring-green-500' : ''} ${errors.fullName ? 'border-destructive' : ''}`}
                         required
                       />
+                      {signupFullName.length >= 2 && (
+                        <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-500" />
+                      )}
                     </div>
                     {errors.fullName && (
-                      <p className="text-xs text-destructive">{errors.fullName}</p>
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.fullName}
+                      </p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -443,12 +450,18 @@ export default function Auth() {
                         placeholder="correo@ejemplo.com"
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
-                        className="pl-10"
+                        className={`pl-10 pr-10 ${/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupEmail) ? 'border-green-500 focus-visible:ring-green-500' : ''} ${errors.email ? 'border-destructive' : ''}`}
                         required
                       />
+                      {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupEmail) && (
+                        <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-500" />
+                      )}
                     </div>
                     {errors.email && (
-                      <p className="text-xs text-destructive">{errors.email}</p>
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.email}
+                      </p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -493,8 +506,12 @@ export default function Auth() {
                         {showSignupPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                       </Button>
                     </div>
+                    <PasswordStrengthIndicator password={signupPassword} />
                     {errors.password && (
-                      <p className="text-xs text-destructive">{errors.password}</p>
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.password}
+                      </p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -507,21 +524,35 @@ export default function Auth() {
                         placeholder="••••••••"
                         value={signupConfirmPassword}
                         onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                        className="pl-10 pr-10"
+                        className={`pl-10 pr-16 ${signupConfirmPassword && signupConfirmPassword === signupPassword ? 'border-green-500 focus-visible:ring-green-500' : ''} ${errors.confirmPassword ? 'border-destructive' : ''}`}
                         required
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        onClick={() => setShowSignupConfirmPassword(!showSignupConfirmPassword)}
-                      >
-                        {showSignupConfirmPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                      </Button>
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        {signupConfirmPassword && signupConfirmPassword === signupPassword && (
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => setShowSignupConfirmPassword(!showSignupConfirmPassword)}
+                        >
+                          {showSignupConfirmPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                        </Button>
+                      </div>
                     </div>
-                    {errors.confirmPassword && (
-                      <p className="text-xs text-destructive">{errors.confirmPassword}</p>
+                    {signupConfirmPassword && signupConfirmPassword !== signupPassword && (
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Las contraseñas no coinciden
+                      </p>
+                    )}
+                    {errors.confirmPassword && !signupConfirmPassword && (
+                      <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {errors.confirmPassword}
+                      </p>
                     )}
                   </div>
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -534,9 +565,6 @@ export default function Auth() {
                       'Crear Cuenta'
                     )}
                   </Button>
-                  <p className="text-xs text-muted-foreground text-center mt-2">
-                    La contraseña debe tener: 8+ caracteres, mayúscula, minúscula, número y carácter especial
-                  </p>
                 </form>
               </TabsContent>
             </Tabs>
