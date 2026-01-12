@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { RippleButton } from '@/components/ui/RippleButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -354,7 +355,7 @@ export default function Auth() {
                       ¿Olvidaste tu contraseña?
                     </Button>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <RippleButton type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -363,7 +364,7 @@ export default function Auth() {
                     ) : (
                       'Iniciar Sesión'
                     )}
-                  </Button>
+                  </RippleButton>
                 </form>
 
                 {/* Forgot Password Dialog */}
@@ -555,7 +556,7 @@ export default function Auth() {
                       </p>
                     )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <RippleButton type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -564,7 +565,7 @@ export default function Auth() {
                     ) : (
                       'Crear Cuenta'
                     )}
-                  </Button>
+                  </RippleButton>
                 </form>
               </TabsContent>
             </Tabs>
