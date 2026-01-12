@@ -152,9 +152,6 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
             <span className="text-xs font-bold text-sidebar-foreground tracking-tight truncate">
               Sistema de Tickets
             </span>
-            <span className="text-[10px] text-sidebar-foreground/60 truncate">
-              PAI Paraguay
-            </span>
           </div>
         </Link>
         {/* Close button for mobile */}

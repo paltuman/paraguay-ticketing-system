@@ -54,7 +54,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className="hidden sm:inline">•</span>
             <span>Programa Ampliado de Inmunizaciones</span>
             <span className="hidden sm:inline">•</span>
-            <span>© {new Date().getFullYear()} Todos los derechos reservados</span>
+            <span>© {new Date().getFullYear()}</span>
           </div>
         </footer>
       </div>
