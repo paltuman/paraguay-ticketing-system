@@ -52,7 +52,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <span className="font-medium">Subsistema de Información</span>
             </div>
             <span className="hidden sm:inline">•</span>
-            <span>Programa Ampliado de Inmunizaciones - PAI Paraguay</span>
+            <span>Programa Ampliado de Inmunizaciones</span>
             <span className="hidden sm:inline">•</span>
             <span>© {new Date().getFullYear()} Todos los derechos reservados</span>
           </div>
