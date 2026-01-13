@@ -41,21 +41,54 @@ export default function ResetPassword() {
   useEffect(() => {
     // Check if we have a valid recovery session
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Checking reset password session...');
+      console.log('Current URL:', window.location.href);
+      console.log('Hash:', window.location.hash);
+      console.log('Search params:', window.location.search);
       
       // Check for access_token in URL hash (Supabase recovery flow)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       const type = hashParams.get('type');
+      const errorCode = hashParams.get('error_code');
+      const errorDescription = hashParams.get('error_description');
       
-      if (type === 'recovery' && accessToken) {
+      // Also check URL search params (some hosting services use query params)
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromQuery = urlParams.get('access_token') || urlParams.get('token');
+      const typeFromQuery = urlParams.get('type');
+      
+      console.log('Token from hash:', accessToken ? 'exists' : 'none');
+      console.log('Type from hash:', type);
+      console.log('Token from query:', tokenFromQuery ? 'exists' : 'none');
+      console.log('Error:', errorCode, errorDescription);
+      
+      // Handle error in URL
+      if (errorCode || errorDescription) {
+        console.error('Error in URL:', errorCode, errorDescription);
+        setIsValidToken(false);
+        toast({
+          variant: 'destructive',
+          title: 'Enlace inválido',
+          description: errorDescription || 'El enlace de recuperación ha expirado o es inválido.',
+        });
+        return;
+      }
+      
+      if ((type === 'recovery' || typeFromQuery === 'recovery') && (accessToken || tokenFromQuery)) {
+        const token = accessToken || tokenFromQuery;
+        const refreshToken = hashParams.get('refresh_token') || urlParams.get('refresh_token') || '';
+        
+        console.log('Setting session with recovery token...');
+        
         // Set the session from the recovery token
         const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: hashParams.get('refresh_token') || '',
+          access_token: token!,
+          refresh_token: refreshToken,
         });
         
         if (error) {
+          console.error('Error setting session:', error);
           setIsValidToken(false);
           toast({
             variant: 'destructive',
@@ -63,18 +96,38 @@ export default function ResetPassword() {
             description: 'El enlace de recuperación ha expirado o es inválido.',
           });
         } else {
+          console.log('Session set successfully');
           setIsValidToken(true);
         }
-      } else if (session) {
-        // User might have a valid session from clicking the email link
-        setIsValidToken(true);
       } else {
-        // No valid token or session
-        setIsValidToken(false);
+        // Check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Existing session:', session ? 'exists' : 'none');
+        
+        if (session) {
+          // User might have a valid session from clicking the email link
+          setIsValidToken(true);
+        } else {
+          // No valid token or session
+          console.log('No valid token or session found');
+          setIsValidToken(false);
+        }
       }
     };
 
+    // Listen for auth state changes (important for cross-domain redirects)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session ? 'has session' : 'no session');
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        setIsValidToken(true);
+      }
+    });
+
     checkSession();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {

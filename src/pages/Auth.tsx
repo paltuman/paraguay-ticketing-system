@@ -109,15 +109,26 @@ export default function Auth() {
     setIsResetting(true);
     
     try {
-      const redirectUrl = `${window.location.origin}/reset-password`;
+      // Use current origin - works for Firebase, Vercel, Cloudflare, etc.
+      const currentOrigin = window.location.origin;
+      const redirectUrl = `${currentOrigin}/reset-password`;
+      
+      console.log('Password reset redirect URL:', redirectUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: redirectUrl,
       });
 
       if (error) {
-        // Handle specific errors
-        if (error.message.includes('User not found') || error.message.includes('not found')) {
+        console.error('Password reset error:', error);
+        // Handle rate limit error
+        if (error.message.includes('rate_limit') || error.message.includes('after') || error.status === 429) {
+          toast({
+            variant: 'destructive',
+            title: 'Demasiadas solicitudes',
+            description: 'Por favor espera unos segundos antes de intentar nuevamente.',
+          });
+        } else if (error.message.includes('User not found') || error.message.includes('not found')) {
           toast({
             variant: 'destructive',
             title: 'Correo no registrado',
@@ -139,6 +150,7 @@ export default function Auth() {
         setResetEmail('');
       }
     } catch (err) {
+      console.error('Password reset exception:', err);
       toast({
         variant: 'destructive',
         title: 'Error',
