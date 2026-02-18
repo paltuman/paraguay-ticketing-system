@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Ticket, MessageCircle, Bell, LayoutDashboard } from "lucide-react";
 import logoSubsistema from "@/assets/Logo_Subsistema.png";
 
 const Flyer = () => {
@@ -24,22 +24,22 @@ const Flyer = () => {
     {
       title: "Gestión de Tickets",
       desc: "Registro, clasificación y seguimiento de solicitudes con asignación de prioridades, estados y responsables, asegurando control y trazabilidad en todo el proceso.",
-      icon: "🎫",
+      icon: "ticket",
     },
     {
       title: "Comunicación en Tiempo Real",
       desc: "Canal de mensajería directa entre usuarios y personal de soporte que permite intercambiar información, adjuntar evidencias y agilizar la resolución de incidencias.",
-      icon: "💬",
+      icon: "message",
     },
     {
       title: "Sistema de Notificaciones",
       desc: "Envío automático de alertas ante actualizaciones, cambios de estado o respuestas, manteniendo a los usuarios informados en todo momento.",
-      icon: "🔔",
+      icon: "bell",
     },
     {
       title: "Panel de Control y Seguimiento",
       desc: "Visualización centralizada del estado de solicitudes, métricas de atención y control operativo para una gestión eficiente del servicio.",
-      icon: "📊",
+      icon: "layout-dashboard",
     },
   ];
 
@@ -190,9 +190,12 @@ const Flyer = () => {
                   background: "linear-gradient(135deg, #003366, #0055A4)",
                   borderRadius: "10px", minWidth: "46px", height: "46px",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "22px", boxShadow: "0 2px 8px rgba(0,51,102,0.2)",
+                  boxShadow: "0 2px 8px rgba(0,51,102,0.2)",
                 }}>
-                  {f.icon}
+                  {f.icon === "ticket" && <Ticket size={22} color="#ffffff" />}
+                  {f.icon === "message" && <MessageCircle size={22} color="#ffffff" />}
+                  {f.icon === "bell" && <Bell size={22} color="#ffffff" />}
+                  {f.icon === "layout-dashboard" && <LayoutDashboard size={22} color="#ffffff" />}
                 </div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{
@@ -248,7 +251,7 @@ const Flyer = () => {
               color: "#ffffff", fontSize: "20px", fontWeight: 800,
               margin: 0, letterSpacing: "0.5px",
             }}>
-              sistemapai.lovable.app
+              soporte-subsistema.web.app/auth
             </p>
           </div>
           <p style={{
