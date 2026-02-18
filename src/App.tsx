@@ -18,6 +18,7 @@ import Users from "./pages/Users";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import AuditLogs from "./pages/AuditLogs";
+import Flyer from "./pages/Flyer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -112,6 +113,7 @@ const App = () => (
                 </AppLayout>
               }
             />
+                <Route path="/flyer" element={<Flyer />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </ImpersonationProvider>
