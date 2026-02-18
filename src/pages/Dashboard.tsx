@@ -27,7 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { subDays } from 'date-fns';
 import { toast } from 'sonner';
 import { HelpIndicator } from '@/components/onboarding/HelpIndicator';
-import { downloadManual } from '@/lib/generateManuals';
+
 
 interface Stats {
   total: number;
@@ -179,18 +179,6 @@ export default function Dashboard() {
                 <FileDown className="h-4 w-4 mr-2" />
                 Exportar
               </Button>
-            )}
-            {isSuperAdmin && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => downloadManual('support')} className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
-                  <FileDown className="h-4 w-4 mr-2" />
-                  Manual Soporte
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => downloadManual('superadmin')} className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
-                  <FileDown className="h-4 w-4 mr-2" />
-                  Manual Admin
-                </Button>
-              </>
             )}
             {!isSupervisor && (
               <HelpIndicator

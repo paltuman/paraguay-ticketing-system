@@ -292,7 +292,6 @@ export default function Auth() {
           <p className="text-xl opacity-90">Sistema de Gestión de Tickets</p>
         </div>
         <div className="absolute bottom-8 text-center">
-          <p className="text-sm opacity-60 mb-1">Departamento de Información</p>
           <p className="text-xs opacity-40">© {new Date().getFullYear()}</p>
         </div>
       </div>
