@@ -237,28 +237,58 @@ export default function Auth() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 gradient-hero">
+        {/* Floating particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full opacity-20"
+              style={{
+                width: `${Math.random() * 6 + 2}px`,
+                height: `${Math.random() * 6 + 2}px`,
+                background: 'hsl(0 0% 100%)',
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animation: `float ${Math.random() * 8 + 6}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          ))}
+        </div>
+        {/* Gradient orbs */}
+        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, hsl(211 84% 60%) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, hsl(205 85% 60%) 0%, transparent 70%)' }} />
+      </div>
+
       {/* Left Side - Hero */}
-      <div className="hidden lg:flex lg:w-1/2 bg-background flex-col items-center justify-center p-12 relative">
+      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 relative z-10">
         <div className="text-center animate-fade-in">
-          <img 
-            src={logo} 
-            alt="Programa Ampliado de Inmunizaciones" 
-            className="mx-auto mb-10 h-64 w-64 object-contain" 
-          />
-          <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground">Programa Ampliado de Inmunizaciones</h1>
-          <p className="text-xl text-muted-foreground">Sistema de Gestión de Tickets</p>
+          <div className="mx-auto mb-10 h-56 w-56 relative">
+            <div className="absolute inset-0 rounded-full opacity-20 blur-2xl" style={{ background: 'hsl(0 0% 100%)' }} />
+            <img 
+              src={logo} 
+              alt="Programa Ampliado de Inmunizaciones" 
+              className="relative h-56 w-56 object-contain drop-shadow-2xl" 
+            />
+          </div>
+          <h1 className="mb-3 text-4xl font-bold tracking-tight text-white">Programa Ampliado de Inmunizaciones</h1>
+          <p className="text-xl text-white/70">Sistema de Gestión de Tickets</p>
         </div>
         <div className="absolute bottom-8 text-center">
-          <p className="text-xs text-muted-foreground/40">© {new Date().getFullYear()}</p>
+          <p className="text-xs text-white/30">© {new Date().getFullYear()}</p>
         </div>
       </div>
 
       {/* Right Side - Auth Forms */}
-      <div className="flex w-full items-center justify-center bg-background p-4 sm:p-8 lg:w-1/2">
-        <Card className="w-full max-w-md animate-fade-in border shadow-lg">
+      <div className="flex w-full items-center justify-center p-4 sm:p-8 lg:w-1/2 relative z-10">
+        <Card className="w-full max-w-md animate-fade-in border-white/10 shadow-2xl backdrop-blur-xl bg-card/95">
           <CardHeader className="space-y-1 pb-2">
-            <img src={logo} alt="PAI" className="mx-auto mb-4 h-20 w-20 object-contain lg:hidden" />
+            <div className="mx-auto mb-4 lg:hidden">
+              <img src={logo} alt="PAI" className="h-20 w-20 object-contain drop-shadow-lg" />
+            </div>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
