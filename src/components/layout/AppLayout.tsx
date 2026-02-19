@@ -48,7 +48,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <footer className="border-t border-border bg-card/50 backdrop-blur-sm px-4 py-3">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <img src={logo} alt="Subsistema de Información" className="h-6 w-6 rounded-full" />
+              <img src={logo} alt="Subsistema de Información" className="h-6 w-6 object-contain" />
               <span className="font-medium">Subsistema de Información</span>
             </div>
             <span className="hidden sm:inline">•</span>
