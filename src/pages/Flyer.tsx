@@ -92,13 +92,12 @@ const Flyer = () => {
 
           <div style={{ display: "flex", alignItems: "center", gap: "24px", position: "relative", zIndex: 1 }}>
             <div style={{
-              background: "rgba(255,255,255,0.1)", borderRadius: "16px", padding: "8px",
-              backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.15)",
+              padding: "4px",
             }}>
               <img
                 src={logoPai}
                 alt="Logo PAI"
-                style={{ width: "78px", height: "78px", borderRadius: "50%" }}
+                style={{ width: "78px", height: "78px", objectFit: "contain" }}
                 crossOrigin="anonymous"
               />
             </div>
