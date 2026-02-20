@@ -2,7 +2,7 @@ import { useRef } from "react";
 import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
 import { Download, Ticket, MessageCircle, Bell, LayoutDashboard } from "lucide-react";
-import logoSubsistema from "@/assets/Logo_Subsistema.png";
+import logoPai from "@/assets/logo-pai-circular.png";
 
 const Flyer = () => {
   const flyerRef = useRef<HTMLDivElement>(null);
@@ -96,9 +96,9 @@ const Flyer = () => {
               backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.15)",
             }}>
               <img
-                src={logoSubsistema}
-                alt="Logo"
-                style={{ width: "78px", height: "78px", borderRadius: "10px" }}
+                src={logoPai}
+                alt="Logo PAI"
+                style={{ width: "78px", height: "78px", borderRadius: "50%" }}
                 crossOrigin="anonymous"
               />
             </div>
