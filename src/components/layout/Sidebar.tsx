@@ -138,8 +138,9 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               src={logo}
               alt="PAI"
               className={cn(
+                'rounded-full bg-white ring-2 ring-sidebar-primary/20 group-hover:ring-sidebar-primary/50',
                 'transition-all duration-300 ease-out object-contain',
-                isOpen || isMobile ? 'h-10 w-10' : 'h-12 w-12'
+                isOpen || isMobile ? 'h-10 w-10 p-0.5' : 'h-12 w-12 p-1'
               )}
             />
             <div className="absolute inset-0 rounded-full bg-sidebar-primary/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
