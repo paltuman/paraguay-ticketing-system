@@ -14,33 +14,33 @@
 
 @layer base {
   :root {
-    /* Colores principales de Paraguay */
-    --background: 210 40% 98%;
-    --foreground: 215 35% 15%;
+    /* Colores PAI - Azul celeste, Azul marino, Blanco, Rojo */
+    --background: 205 45% 97%;
+    --foreground: 212 40% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 35% 15%;
+    --card-foreground: 212 40% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 35% 15%;
+    --popover-foreground: 212 40% 12%;
 
-    /* Azul institucional */
-    --primary: 211 84% 45%;
+    /* Azul celeste PAI */
+    --primary: 204 78% 52%;
     --primary-foreground: 0 0% 100%;
 
-    /* Azul marino */
-    --secondary: 215 50% 23%;
+    /* Azul marino PAI */
+    --secondary: 212 65% 28%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 30% 94%;
-    --muted-foreground: 215 20% 45%;
+    --muted: 205 30% 93%;
+    --muted-foreground: 212 20% 42%;
 
-    /* Azul claro para acentos */
-    --accent: 205 85% 92%;
-    --accent-foreground: 211 84% 35%;
+    /* Azul celeste claro para acentos */
+    --accent: 200 80% 92%;
+    --accent-foreground: 204 78% 38%;
 
-    /* Rojo paraguayo para destructivo/alertas */
-    --destructive: 0 72% 51%;
+    /* Rojo PAI para destructivo/alertas */
+    --destructive: 355 80% 48%;
     --destructive-foreground: 0 0% 100%;
 
     /* Success color */
@@ -51,49 +51,49 @@
     --warning: 45 93% 47%;
     --warning-foreground: 215 35% 15%;
 
-    --border: 210 25% 88%;
-    --input: 210 25% 88%;
-    --ring: 211 84% 45%;
+    --border: 205 25% 87%;
+    --input: 205 25% 87%;
+    --ring: 204 78% 52%;
 
     --radius: 0.75rem;
 
-    /* Sidebar con azul marino */
-    --sidebar-background: 215 50% 18%;
-    --sidebar-foreground: 210 30% 92%;
-    --sidebar-primary: 211 84% 55%;
+    /* Sidebar con azul marino PAI */
+    --sidebar-background: 212 60% 16%;
+    --sidebar-foreground: 205 30% 92%;
+    --sidebar-primary: 204 78% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 45% 25%;
-    --sidebar-accent-foreground: 210 30% 92%;
-    --sidebar-border: 215 40% 25%;
-    --sidebar-ring: 211 84% 55%;
+    --sidebar-accent: 212 50% 22%;
+    --sidebar-accent-foreground: 205 30% 92%;
+    --sidebar-border: 212 45% 22%;
+    --sidebar-ring: 204 78% 55%;
 
     /* Colores semánticos para tickets */
-    --status-open: 211 84% 45%;
+    --status-open: 204 78% 52%;
     --status-in-progress: 45 93% 47%;
     --status-resolved: 142 71% 45%;
-    --status-closed: 215 20% 55%;
+    --status-closed: 212 20% 55%;
 
     --priority-low: 142 71% 45%;
     --priority-medium: 45 93% 47%;
     --priority-high: 25 95% 53%;
-    --priority-urgent: 0 72% 51%;
+    --priority-urgent: 355 80% 48%;
 
-    /* Gradientes institucionales */
-    --gradient-primary: linear-gradient(135deg, hsl(211 84% 45%) 0%, hsl(215 50% 23%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(205 85% 92%) 0%, hsl(210 30% 94%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(215 50% 18%) 0%, hsl(211 84% 35%) 100%);
+    /* Gradientes institucionales PAI */
+    --gradient-primary: linear-gradient(135deg, hsl(204 78% 52%) 0%, hsl(212 65% 28%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(200 80% 92%) 0%, hsl(205 30% 93%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(212 60% 16%) 0%, hsl(204 78% 38%) 100%);
     --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(211 84% 45% / 0.15) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(205 85% 92% / 0.2) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, hsl(211 84% 55% / 0.1) 0px, transparent 50%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(204 78% 52% / 0.15) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(200 80% 92% / 0.2) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsl(204 78% 55% / 0.1) 0px, transparent 50%);
 
-    /* Sombras elegantes 2025 */
-    --shadow-sm: 0 1px 2px 0 hsl(215 50% 23% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(215 50% 23% / 0.08), 0 2px 4px -2px hsl(215 50% 23% / 0.06);
-    --shadow-lg: 0 10px 25px -3px hsl(215 50% 23% / 0.1), 0 4px 6px -4px hsl(215 50% 23% / 0.08);
-    --shadow-xl: 0 20px 40px -8px hsl(215 50% 23% / 0.15);
-    --shadow-glow: 0 0 30px hsl(211 84% 45% / 0.25);
-    --shadow-glass: 0 8px 32px 0 hsl(215 50% 23% / 0.1);
+    /* Sombras elegantes PAI */
+    --shadow-sm: 0 1px 2px 0 hsl(212 65% 28% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(212 65% 28% / 0.08), 0 2px 4px -2px hsl(212 65% 28% / 0.06);
+    --shadow-lg: 0 10px 25px -3px hsl(212 65% 28% / 0.1), 0 4px 6px -4px hsl(212 65% 28% / 0.08);
+    --shadow-xl: 0 20px 40px -8px hsl(212 65% 28% / 0.15);
+    --shadow-glow: 0 0 30px hsl(204 78% 52% / 0.25);
+    --shadow-glass: 0 8px 32px 0 hsl(212 65% 28% / 0.1);
   }
 
   .dark {
@@ -108,24 +108,24 @@
     --popover: 220 25% 11%;
     --popover-foreground: 210 20% 92%;
 
-    /* Azul primario más brillante en oscuro */
-    --primary: 211 90% 58%;
+    /* Azul celeste PAI brillante en oscuro */
+    --primary: 204 85% 60%;
     --primary-foreground: 0 0% 100%;
 
     /* Secundario con mejor visibilidad */
-    --secondary: 220 30% 18%;
-    --secondary-foreground: 210 20% 90%;
+    --secondary: 215 30% 18%;
+    --secondary-foreground: 205 20% 90%;
 
     /* Muted más suave */
-    --muted: 220 25% 15%;
-    --muted-foreground: 215 15% 60%;
+    --muted: 215 25% 15%;
+    --muted-foreground: 210 15% 60%;
 
     /* Accent más visible */
-    --accent: 220 35% 16%;
-    --accent-foreground: 211 90% 70%;
+    --accent: 215 35% 16%;
+    --accent-foreground: 204 85% 72%;
 
-    /* Destructivo más vibrante */
-    --destructive: 0 65% 52%;
+    /* Rojo PAI vibrante */
+    --destructive: 355 72% 54%;
     --destructive-foreground: 0 0% 100%;
 
     /* Success más visible */
@@ -139,41 +139,41 @@
     /* Bordes más sutiles */
     --border: 220 20% 18%;
     --input: 220 25% 15%;
-    --ring: 211 90% 58%;
+    --ring: 204 85% 60%;
 
-    /* Sidebar más oscura y elegante */
-    --sidebar-background: 220 30% 5%;
-    --sidebar-foreground: 210 15% 85%;
-    --sidebar-primary: 211 90% 58%;
+    /* Sidebar oscura PAI */
+    --sidebar-background: 215 30% 5%;
+    --sidebar-foreground: 205 15% 85%;
+    --sidebar-primary: 204 85% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 30% 12%;
-    --sidebar-accent-foreground: 210 15% 85%;
-    --sidebar-border: 220 25% 14%;
-    --sidebar-ring: 211 90% 58%;
+    --sidebar-accent: 215 30% 12%;
+    --sidebar-accent-foreground: 205 15% 85%;
+    --sidebar-border: 215 25% 14%;
+    --sidebar-ring: 204 85% 60%;
 
     /* Status colors for dark mode */
-    --status-open: 211 90% 58%;
+    --status-open: 204 85% 60%;
     --status-in-progress: 45 90% 50%;
     --status-resolved: 145 65% 42%;
-    --status-closed: 220 15% 50%;
+    --status-closed: 215 15% 50%;
 
     --priority-low: 145 65% 42%;
     --priority-medium: 45 90% 50%;
     --priority-high: 25 95% 55%;
-    --priority-urgent: 0 65% 52%;
+    --priority-urgent: 355 72% 54%;
 
-    /* Gradientes para modo oscuro */
+    /* Gradientes para modo oscuro PAI */
     --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(211 90% 58% / 0.08) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(211 90% 70% / 0.05) 0px, transparent 50%);
-    --gradient-primary: linear-gradient(135deg, hsl(211 90% 50%) 0%, hsl(220 50% 25%) 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(204 85% 60% / 0.08) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(204 85% 72% / 0.05) 0px, transparent 50%);
+    --gradient-primary: linear-gradient(135deg, hsl(204 85% 52%) 0%, hsl(212 50% 25%) 100%);
     
-    /* Sombras más sutiles para modo oscuro */
+    /* Sombras para modo oscuro */
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
     --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
     --shadow-lg: 0 10px 25px -3px hsl(0 0% 0% / 0.5), 0 4px 6px -4px hsl(0 0% 0% / 0.4);
     --shadow-xl: 0 20px 40px -8px hsl(0 0% 0% / 0.6);
-    --shadow-glow: 0 0 30px hsl(211 90% 58% / 0.2);
+    --shadow-glow: 0 0 30px hsl(204 85% 60% / 0.2);
     --shadow-glass: 0 8px 32px 0 hsl(0 0% 0% / 0.4);
   }
 }
