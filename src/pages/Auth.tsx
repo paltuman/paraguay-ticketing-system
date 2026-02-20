@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, Building2, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { z } from 'zod';
-import logo from '@/assets/Logo_Subsistema.png';
+import logo from '@/assets/logo-pai-circular.png';
 import { Department } from '@/types/database';
 
 const loginSchema = z.object({
@@ -281,11 +281,11 @@ export default function Auth() {
         </div>
         
         <div className="text-center relative z-10 animate-fade-in">
-          <div className="mx-auto mb-10 h-56 w-56 rounded-full bg-white/95 p-3 shadow-glow flex items-center justify-center backdrop-blur-sm">
+          <div className="mx-auto mb-10 h-52 w-52 flex items-center justify-center drop-shadow-2xl">
             <img 
               src={logo} 
               alt="Programa Ampliado de Inmunizaciones" 
-              className="h-48 w-48 object-contain" 
+              className="h-52 w-52 object-contain" 
             />
           </div>
           <h1 className="mb-3 text-4xl font-bold tracking-tight">Programa Ampliado de Inmunizaciones</h1>
@@ -300,7 +300,7 @@ export default function Auth() {
       <div className="flex w-full items-center justify-center bg-background p-4 sm:p-8 lg:w-1/2">
         <Card className="w-full max-w-md animate-fade-in border shadow-lg">
           <CardHeader className="space-y-1 pb-2">
-            <img src={logo} alt="PAI" className="mx-auto mb-4 h-20 w-20 rounded-full lg:hidden" />
+            <img src={logo} alt="PAI" className="mx-auto mb-4 h-20 w-20 object-contain lg:hidden" />
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
