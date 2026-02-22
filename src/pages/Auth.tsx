@@ -285,7 +285,7 @@ export default function Auth() {
             <img 
               src={logo} 
               alt="Programa Ampliado de Inmunizaciones" 
-              className="h-48 w-48 object-contain" 
+              className="h-48 w-48 object-contain rounded-full bg-white" 
             />
           </div>
           <h1 className="mb-3 text-4xl font-bold tracking-tight">Programa Ampliado de Inmunizaciones</h1>
@@ -300,7 +300,7 @@ export default function Auth() {
       <div className="flex w-full items-center justify-center bg-background p-4 sm:p-8 lg:w-1/2">
         <Card className="w-full max-w-md animate-fade-in border shadow-lg">
           <CardHeader className="space-y-1 pb-2">
-            <img src={logo} alt="PAI" className="mx-auto mb-4 h-20 w-20 rounded-full lg:hidden" />
+            <img src={logo} alt="PAI" className="mx-auto mb-4 h-20 w-20 rounded-full bg-white lg:hidden" />
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
