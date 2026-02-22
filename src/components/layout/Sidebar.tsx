@@ -14,7 +14,7 @@ import {
   Shield,
   X,
 } from 'lucide-react';
-import logo from '@/assets/Logo_Subsistema.png';
+import logo from '@/assets/logo-pai-circular.png';
 import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
