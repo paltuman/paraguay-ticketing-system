@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Lock, Eye, EyeOff, CheckCircle2, KeyRound } from 'lucide-react';
 import { z } from 'zod';
-import logo from '@/assets/logo-pai.png';
+import logo from '@/assets/logo-pai-circular.png';
 import { auditPasswordChange } from '@/lib/audit';
 
 const passwordSchema = z.object({

@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, Building2, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { z } from 'zod';
-import logo from '@/assets/Logo_Subsistema.png';
+import logo from '@/assets/logo-pai-circular.png';
 import { Department } from '@/types/database';
 
 const loginSchema = z.object({

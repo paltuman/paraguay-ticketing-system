@@ -7,7 +7,7 @@ import { Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { GuidedTour } from '@/components/onboarding/GuidedTour';
-import logo from '@/assets/Logo_Subsistema.png';
+import logo from '@/assets/logo-pai-circular.png';
 
 interface AppLayoutProps {
   children: React.ReactNode;
