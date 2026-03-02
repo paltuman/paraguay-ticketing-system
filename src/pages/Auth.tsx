@@ -44,7 +44,7 @@ const signupSchema = z.object({
     .regex(/[0-9]/, 'Debe contener al menos un número')
     .regex(/[^A-Za-z0-9]/, 'Debe contener al menos un carácter especial'),
   confirmPassword: z.string(),
-  departmentId: z.string().min(1, 'Selecciona un departamento'),
+  departmentId: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
