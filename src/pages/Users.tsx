@@ -615,7 +615,7 @@ export default function Users() {
                     <span className="ml-auto text-xs opacity-60">Control total</span>
                   </Button>
                 )}
-                {(['admin', 'supervisor', 'support_user'] as AppRole[]).map((role) => (
+                {(['admin', 'supervisor', 'support_user', 'level_1_support', 'level_2_support', 'level_3_support', 'end_user'] as AppRole[]).map((role) => (
                   <Button
                     key={role}
                     variant={selectedUser.roles[0] === role ? 'default' : 'outline'}
@@ -632,6 +632,18 @@ export default function Users() {
                     )}
                     {role === 'support_user' && (
                       <span className="ml-auto text-xs opacity-60">Tickets propios</span>
+                    )}
+                    {role === 'level_1_support' && (
+                      <span className="ml-auto text-xs opacity-60">Mesa de ayuda</span>
+                    )}
+                    {role === 'level_2_support' && (
+                      <span className="ml-auto text-xs opacity-60">Soporte especializado</span>
+                    )}
+                    {role === 'level_3_support' && (
+                      <span className="ml-auto text-xs opacity-60">Soporte avanzado</span>
+                    )}
+                    {role === 'end_user' && (
+                      <span className="ml-auto text-xs opacity-60">Solo reporta</span>
                     )}
                   </Button>
                 ))}
