@@ -350,11 +350,20 @@ export default function Users() {
   const getRoleBadgeColor = (role: AppRole) => {
     switch (role) {
       case 'admin':
+      case 'superadmin':
         return 'bg-destructive text-destructive-foreground';
       case 'supervisor':
         return 'bg-status-in-progress text-white';
       case 'support_user':
         return 'bg-primary text-primary-foreground';
+      case 'level_1_support':
+        return 'bg-success text-white';
+      case 'level_2_support':
+        return 'bg-warning text-white';
+      case 'level_3_support':
+        return 'bg-accent text-accent-foreground';
+      case 'end_user':
+        return 'bg-secondary text-secondary-foreground';
       default:
         return 'bg-muted';
     }
