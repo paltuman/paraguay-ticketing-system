@@ -124,4 +124,8 @@ export const roleLabels: Record<AppRole, string> = {
   support_user: 'Usuario de Soporte',
   supervisor: 'Supervisor',
   superadmin: 'Super Administrador',
+  end_user: 'Usuario Final',
+  level_1_support: 'Soporte Nivel 1',
+  level_2_support: 'Soporte Nivel 2',
+  level_3_support: 'Soporte Nivel 3',
 };
