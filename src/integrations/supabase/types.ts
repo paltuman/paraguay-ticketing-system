@@ -455,6 +455,7 @@ export type Database = {
           priority: Database["public"]["Enums"]["ticket_priority"]
           resolved_at: string | null
           status: Database["public"]["Enums"]["ticket_status"]
+          support_level: number
           ticket_number: number
           title: string
           updated_at: string
@@ -470,6 +471,7 @@ export type Database = {
           priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
+          support_level?: number
           ticket_number?: number
           title: string
           updated_at?: string
@@ -485,6 +487,7 @@ export type Database = {
           priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
+          support_level?: number
           ticket_number?: number
           title?: string
           updated_at?: string
@@ -621,7 +624,15 @@ export type Database = {
       record_rate_limit: { Args: { p_action: string }; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "support_user" | "supervisor" | "superadmin"
+      app_role:
+        | "admin"
+        | "support_user"
+        | "supervisor"
+        | "superadmin"
+        | "end_user"
+        | "level_1_support"
+        | "level_2_support"
+        | "level_3_support"
       ticket_priority: "low" | "medium" | "high" | "urgent"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
     }
@@ -751,7 +762,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "support_user", "supervisor", "superadmin"],
+      app_role: [
+        "admin",
+        "support_user",
+        "supervisor",
+        "superadmin",
+        "end_user",
+        "level_1_support",
+        "level_2_support",
+        "level_3_support",
+      ],
       ticket_priority: ["low", "medium", "high", "urgent"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
     },

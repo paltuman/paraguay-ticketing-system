@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { auditLogin, auditLogout, auditUserCreated } from '@/lib/audit';
 
-type AppRole = 'admin' | 'support_user' | 'supervisor' | 'superadmin';
+type AppRole = 'admin' | 'support_user' | 'supervisor' | 'superadmin' | 'end_user' | 'level_1_support' | 'level_2_support' | 'level_3_support';
 
 interface Profile {
   id: string;
