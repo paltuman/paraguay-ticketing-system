@@ -1,4 +1,12 @@
-export type AppRole = 'admin' | 'support_user' | 'supervisor' | 'superadmin';
+export type AppRole =
+  | 'admin'
+  | 'support_user'
+  | 'supervisor'
+  | 'superadmin'
+  | 'end_user'
+  | 'level_1_support'
+  | 'level_2_support'
+  | 'level_3_support';
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
 
