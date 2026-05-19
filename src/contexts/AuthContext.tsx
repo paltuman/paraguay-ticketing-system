@@ -26,7 +26,13 @@ interface AuthContextType {
   isSupervisor: boolean;
   isSupportUser: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, departmentId?: string) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    departmentId?: string,
+    orgUnit?: { regionId?: string; districtId?: string; healthServiceId?: string }
+  ) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -242,7 +248,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, departmentId?: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    departmentId?: string,
+    orgUnit?: { regionId?: string; districtId?: string; healthServiceId?: string }
+  ) => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { data, error } = await supabase.auth.signUp({
@@ -270,12 +282,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error };
     }
 
-    // Update department_id in profile if provided
-    if (data.user && departmentId) {
-      await supabase
-        .from('profiles')
-        .update({ department_id: departmentId })
-        .eq('id', data.user.id);
+    // Update profile org info if provided
+    if (data.user) {
+      const updates: {
+        department_id?: string;
+        region_id?: string;
+        district_id?: string;
+        health_service_id?: string;
+      } = {};
+      if (departmentId) updates.department_id = departmentId;
+      if (orgUnit?.regionId) updates.region_id = orgUnit.regionId;
+      if (orgUnit?.districtId) updates.district_id = orgUnit.districtId;
+      if (orgUnit?.healthServiceId) updates.health_service_id = orgUnit.healthServiceId;
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('profiles').update(updates).eq('id', data.user.id);
+      }
     }
 
     // Log user created event

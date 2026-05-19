@@ -45,10 +45,18 @@ const signupSchema = z.object({
     .regex(/[^A-Za-z0-9]/, 'Debe contener al menos un carácter especial'),
   confirmPassword: z.string(),
   departmentId: z.string().optional(),
+  regionId: z.string().min(1, 'Selecciona una región/departamento'),
+  districtId: z.string().min(1, 'Selecciona un distrito/municipio'),
+  serviceType: z.enum(['public', 'private']),
+  healthServiceId: z.string().min(1, 'Selecciona un servicio de salud'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
 });
+
+interface Region { id: string; name: string; }
+interface District { id: string; name: string; region_id: string; }
+interface HealthService { id: string; name: string; district_id: string; service_type: 'public' | 'private'; }
 
 export default function Auth() {
   const { user, isLoading, signIn, signUp } = useAuth();
@@ -56,6 +64,11 @@ export default function Auth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [healthServices, setHealthServices] = useState<HealthService[]>([]);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingServices, setLoadingServices] = useState(false);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -68,6 +81,10 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [signupDepartmentId, setSignupDepartmentId] = useState('');
+  const [signupRegionId, setSignupRegionId] = useState('');
+  const [signupDistrictId, setSignupDistrictId] = useState('');
+  const [signupServiceType, setSignupServiceType] = useState<'public' | 'private'>('public');
+  const [signupHealthServiceId, setSignupHealthServiceId] = useState('');
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showSignupConfirmPassword, setShowSignupConfirmPassword] = useState(false);
 
@@ -78,7 +95,51 @@ export default function Auth() {
 
   useEffect(() => {
     fetchDepartments();
+    fetchRegions();
   }, []);
+
+  // Load districts when region changes
+  useEffect(() => {
+    setSignupDistrictId('');
+    setSignupHealthServiceId('');
+    setDistricts([]);
+    setHealthServices([]);
+    if (!signupRegionId) return;
+    setLoadingDistricts(true);
+    supabase
+      .from('districts')
+      .select('id, name, region_id')
+      .eq('region_id', signupRegionId)
+      .order('name')
+      .then(({ data }) => {
+        if (data) setDistricts(data);
+        setLoadingDistricts(false);
+      });
+  }, [signupRegionId]);
+
+  // Load health services when district or type changes
+  useEffect(() => {
+    setSignupHealthServiceId('');
+    setHealthServices([]);
+    if (!signupDistrictId) return;
+    setLoadingServices(true);
+    supabase
+      .from('health_services')
+      .select('id, name, district_id, service_type')
+      .eq('district_id', signupDistrictId)
+      .eq('service_type', signupServiceType)
+      .order('name')
+      .then(({ data }) => {
+        if (data) setHealthServices(data as HealthService[]);
+        setLoadingServices(false);
+      });
+  }, [signupDistrictId, signupServiceType]);
+
+  const fetchRegions = async () => {
+    const { data } = await supabase.from('regions').select('id, name').order('name');
+    if (data) setRegions(data);
+  };
+
 
   const fetchDepartments = async () => {
     const { data, error } = await supabase
@@ -208,6 +269,10 @@ export default function Auth() {
         password: signupPassword,
         confirmPassword: signupConfirmPassword,
         departmentId: signupDepartmentId,
+        regionId: signupRegionId,
+        districtId: signupDistrictId,
+        serviceType: signupServiceType,
+        healthServiceId: signupHealthServiceId,
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -223,16 +288,29 @@ export default function Auth() {
     }
 
     setIsSubmitting(true);
-    const result = await signUp(signupEmail, signupPassword, signupFullName, signupDepartmentId);
+    const result = await signUp(
+      signupEmail,
+      signupPassword,
+      signupFullName,
+      signupDepartmentId,
+      {
+        regionId: signupRegionId,
+        districtId: signupDistrictId,
+        healthServiceId: signupHealthServiceId,
+      }
+    );
     setIsSubmitting(false);
 
     if (!result.error) {
-      // Clear form and switch to login
       setSignupFullName('');
       setSignupEmail('');
       setSignupPassword('');
       setSignupConfirmPassword('');
       setSignupDepartmentId('');
+      setSignupRegionId('');
+      setSignupDistrictId('');
+      setSignupHealthServiceId('');
+      setSignupServiceType('public');
     }
   };
 
@@ -494,6 +572,91 @@ export default function Auth() {
                     {errors.departmentId && (
                       <p className="text-xs text-destructive">{errors.departmentId}</p>
                     )}
+                  </div>
+
+                  {/* Región / Departamento sanitario */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-region">Región / Departamento <span className="text-destructive">*</span></Label>
+                    <Select value={signupRegionId} onValueChange={setSignupRegionId}>
+                      <SelectTrigger className={errors.regionId ? 'border-destructive' : ''}>
+                        <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder="Selecciona tu región" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {regions.map((r) => (
+                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.regionId && <p className="text-xs text-destructive">{errors.regionId}</p>}
+                  </div>
+
+                  {/* Distrito / Municipio */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-district">Distrito / Municipio <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={signupDistrictId}
+                      onValueChange={setSignupDistrictId}
+                      disabled={!signupRegionId || loadingDistricts}
+                    >
+                      <SelectTrigger className={errors.districtId ? 'border-destructive' : ''}>
+                        <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder={
+                          !signupRegionId ? 'Primero elige una región'
+                          : loadingDistricts ? 'Cargando...'
+                          : 'Selecciona tu distrito'
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {districts.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.districtId && <p className="text-xs text-destructive">{errors.districtId}</p>}
+                  </div>
+
+                  {/* Tipo de servicio */}
+                  <div className="space-y-2">
+                    <Label>Tipo de Servicio de Salud <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={signupServiceType}
+                      onValueChange={(v) => setSignupServiceType(v as 'public' | 'private')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">Público</SelectItem>
+                        <SelectItem value="private">Privado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Servicio de Salud */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-health-service">Servicio de Salud <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={signupHealthServiceId}
+                      onValueChange={setSignupHealthServiceId}
+                      disabled={!signupDistrictId || loadingServices}
+                    >
+                      <SelectTrigger className={errors.healthServiceId ? 'border-destructive' : ''}>
+                        <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder={
+                          !signupDistrictId ? 'Primero elige un distrito'
+                          : loadingServices ? 'Cargando...'
+                          : healthServices.length === 0 ? `No hay servicios ${signupServiceType === 'public' ? 'públicos' : 'privados'} registrados`
+                          : 'Selecciona tu servicio'
+                        } />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-80">
+                        {healthServices.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.healthServiceId && <p className="text-xs text-destructive">{errors.healthServiceId}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Contraseña</Label>
