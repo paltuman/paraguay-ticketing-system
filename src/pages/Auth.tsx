@@ -573,6 +573,91 @@ export default function Auth() {
                       <p className="text-xs text-destructive">{errors.departmentId}</p>
                     )}
                   </div>
+
+                  {/* Región / Departamento sanitario */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-region">Región / Departamento <span className="text-destructive">*</span></Label>
+                    <Select value={signupRegionId} onValueChange={setSignupRegionId}>
+                      <SelectTrigger className={errors.regionId ? 'border-destructive' : ''}>
+                        <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder="Selecciona tu región" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {regions.map((r) => (
+                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.regionId && <p className="text-xs text-destructive">{errors.regionId}</p>}
+                  </div>
+
+                  {/* Distrito / Municipio */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-district">Distrito / Municipio <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={signupDistrictId}
+                      onValueChange={setSignupDistrictId}
+                      disabled={!signupRegionId || loadingDistricts}
+                    >
+                      <SelectTrigger className={errors.districtId ? 'border-destructive' : ''}>
+                        <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder={
+                          !signupRegionId ? 'Primero elige una región'
+                          : loadingDistricts ? 'Cargando...'
+                          : 'Selecciona tu distrito'
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {districts.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.districtId && <p className="text-xs text-destructive">{errors.districtId}</p>}
+                  </div>
+
+                  {/* Tipo de servicio */}
+                  <div className="space-y-2">
+                    <Label>Tipo de Servicio de Salud <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={signupServiceType}
+                      onValueChange={(v) => setSignupServiceType(v as 'public' | 'private')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">Público</SelectItem>
+                        <SelectItem value="private">Privado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Servicio de Salud */}
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-health-service">Servicio de Salud <span className="text-destructive">*</span></Label>
+                    <Select
+                      value={signupHealthServiceId}
+                      onValueChange={setSignupHealthServiceId}
+                      disabled={!signupDistrictId || loadingServices}
+                    >
+                      <SelectTrigger className={errors.healthServiceId ? 'border-destructive' : ''}>
+                        <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder={
+                          !signupDistrictId ? 'Primero elige un distrito'
+                          : loadingServices ? 'Cargando...'
+                          : healthServices.length === 0 ? `No hay servicios ${signupServiceType === 'public' ? 'públicos' : 'privados'} registrados`
+                          : 'Selecciona tu servicio'
+                        } />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-80">
+                        {healthServices.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.healthServiceId && <p className="text-xs text-destructive">{errors.healthServiceId}</p>}
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Contraseña</Label>
                     <div className="relative">
