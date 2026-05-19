@@ -282,12 +282,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error };
     }
 
-    // Update department_id in profile if provided
-    if (data.user && departmentId) {
-      await supabase
-        .from('profiles')
-        .update({ department_id: departmentId })
-        .eq('id', data.user.id);
+    // Update profile org info if provided
+    if (data.user) {
+      const updates: Record<string, string | null> = {};
+      if (departmentId) updates.department_id = departmentId;
+      if (orgUnit?.regionId) updates.region_id = orgUnit.regionId;
+      if (orgUnit?.districtId) updates.district_id = orgUnit.districtId;
+      if (orgUnit?.healthServiceId) updates.health_service_id = orgUnit.healthServiceId;
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('profiles').update(updates).eq('id', data.user.id);
+      }
     }
 
     // Log user created event
