@@ -115,6 +115,67 @@ export type Database = {
         }
         Relationships: []
       }
+      districts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          region_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          region_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          region_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "districts_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_services: {
+        Row: {
+          created_at: string
+          district_id: string
+          id: string
+          name: string
+          service_type: string
+        }
+        Insert: {
+          created_at?: string
+          district_id: string
+          id?: string
+          name: string
+          service_type?: string
+        }
+        Update: {
+          created_at?: string
+          district_id?: string
+          id?: string
+          name?: string
+          service_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_services_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -161,33 +222,42 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           department_id: string | null
+          district_id: string | null
           email: string
           full_name: string
+          health_service_id: string | null
           id: string
           is_active: boolean
           position: string | null
+          region_id: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           department_id?: string | null
+          district_id?: string | null
           email: string
           full_name: string
+          health_service_id?: string | null
           id: string
           is_active?: boolean
           position?: string | null
+          region_id?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           department_id?: string | null
+          district_id?: string | null
           email?: string
           full_name?: string
+          health_service_id?: string | null
           id?: string
           is_active?: boolean
           position?: string | null
+          region_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -196,6 +266,27 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_health_service_id_fkey"
+            columns: ["health_service_id"]
+            isOneToOne: false
+            referencedRelation: "health_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
@@ -218,6 +309,24 @@ export type Database = {
           created_at?: string
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      regions: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
