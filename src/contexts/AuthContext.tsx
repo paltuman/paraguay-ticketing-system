@@ -284,7 +284,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Update profile org info if provided
     if (data.user) {
-      const updates: Record<string, string | null> = {};
+      const updates: {
+        department_id?: string;
+        region_id?: string;
+        district_id?: string;
+        health_service_id?: string;
+      } = {};
       if (departmentId) updates.department_id = departmentId;
       if (orgUnit?.regionId) updates.region_id = orgUnit.regionId;
       if (orgUnit?.districtId) updates.district_id = orgUnit.districtId;
