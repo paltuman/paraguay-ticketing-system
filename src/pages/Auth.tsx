@@ -45,10 +45,18 @@ const signupSchema = z.object({
     .regex(/[^A-Za-z0-9]/, 'Debe contener al menos un carácter especial'),
   confirmPassword: z.string(),
   departmentId: z.string().optional(),
+  regionId: z.string().min(1, 'Selecciona una región/departamento'),
+  districtId: z.string().min(1, 'Selecciona un distrito/municipio'),
+  serviceType: z.enum(['public', 'private']),
+  healthServiceId: z.string().min(1, 'Selecciona un servicio de salud'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
 });
+
+interface Region { id: string; name: string; }
+interface District { id: string; name: string; region_id: string; }
+interface HealthService { id: string; name: string; district_id: string; service_type: 'public' | 'private'; }
 
 export default function Auth() {
   const { user, isLoading, signIn, signUp } = useAuth();
