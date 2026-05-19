@@ -269,6 +269,10 @@ export default function Auth() {
         password: signupPassword,
         confirmPassword: signupConfirmPassword,
         departmentId: signupDepartmentId,
+        regionId: signupRegionId,
+        districtId: signupDistrictId,
+        serviceType: signupServiceType,
+        healthServiceId: signupHealthServiceId,
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -284,16 +288,29 @@ export default function Auth() {
     }
 
     setIsSubmitting(true);
-    const result = await signUp(signupEmail, signupPassword, signupFullName, signupDepartmentId);
+    const result = await signUp(
+      signupEmail,
+      signupPassword,
+      signupFullName,
+      signupDepartmentId,
+      {
+        regionId: signupRegionId,
+        districtId: signupDistrictId,
+        healthServiceId: signupHealthServiceId,
+      }
+    );
     setIsSubmitting(false);
 
     if (!result.error) {
-      // Clear form and switch to login
       setSignupFullName('');
       setSignupEmail('');
       setSignupPassword('');
       setSignupConfirmPassword('');
       setSignupDepartmentId('');
+      setSignupRegionId('');
+      setSignupDistrictId('');
+      setSignupHealthServiceId('');
+      setSignupServiceType('public');
     }
   };
 
