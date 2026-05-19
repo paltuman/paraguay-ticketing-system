@@ -64,6 +64,11 @@ export default function Auth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [healthServices, setHealthServices] = useState<HealthService[]>([]);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingServices, setLoadingServices] = useState(false);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -76,6 +81,10 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [signupDepartmentId, setSignupDepartmentId] = useState('');
+  const [signupRegionId, setSignupRegionId] = useState('');
+  const [signupDistrictId, setSignupDistrictId] = useState('');
+  const [signupServiceType, setSignupServiceType] = useState<'public' | 'private'>('public');
+  const [signupHealthServiceId, setSignupHealthServiceId] = useState('');
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showSignupConfirmPassword, setShowSignupConfirmPassword] = useState(false);
 
@@ -86,7 +95,51 @@ export default function Auth() {
 
   useEffect(() => {
     fetchDepartments();
+    fetchRegions();
   }, []);
+
+  // Load districts when region changes
+  useEffect(() => {
+    setSignupDistrictId('');
+    setSignupHealthServiceId('');
+    setDistricts([]);
+    setHealthServices([]);
+    if (!signupRegionId) return;
+    setLoadingDistricts(true);
+    supabase
+      .from('districts')
+      .select('id, name, region_id')
+      .eq('region_id', signupRegionId)
+      .order('name')
+      .then(({ data }) => {
+        if (data) setDistricts(data);
+        setLoadingDistricts(false);
+      });
+  }, [signupRegionId]);
+
+  // Load health services when district or type changes
+  useEffect(() => {
+    setSignupHealthServiceId('');
+    setHealthServices([]);
+    if (!signupDistrictId) return;
+    setLoadingServices(true);
+    supabase
+      .from('health_services')
+      .select('id, name, district_id, service_type')
+      .eq('district_id', signupDistrictId)
+      .eq('service_type', signupServiceType)
+      .order('name')
+      .then(({ data }) => {
+        if (data) setHealthServices(data as HealthService[]);
+        setLoadingServices(false);
+      });
+  }, [signupDistrictId, signupServiceType]);
+
+  const fetchRegions = async () => {
+    const { data } = await supabase.from('regions').select('id, name').order('name');
+    if (data) setRegions(data);
+  };
+
 
   const fetchDepartments = async () => {
     const { data, error } = await supabase
