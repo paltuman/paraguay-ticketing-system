@@ -43,7 +43,6 @@ const signupSchema = z.object({
     .regex(/[0-9]/, 'Debe contener al menos un número')
     .regex(/[^A-Za-z0-9]/, 'Debe contener al menos un carácter especial'),
   confirmPassword: z.string(),
-  departmentId: z.string().optional(),
   regionId: z.string().min(1, 'Selecciona una región/departamento'),
   districtId: z.string().min(1, 'Selecciona un distrito/municipio'),
   serviceType: z.enum(['public', 'private']),
@@ -91,7 +90,6 @@ export default function Auth() {
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
-    fetchDepartments();
     fetchRegions();
   }, []);
 
@@ -135,18 +133,6 @@ export default function Auth() {
   const fetchRegions = async () => {
     const { data } = await supabase.from('regions').select('id, name').order('name');
     if (data) setRegions(data);
-  };
-
-
-  const fetchDepartments = async () => {
-    const { data, error } = await supabase
-      .from('departments')
-      .select('*')
-      .order('name');
-
-    if (!error && data) {
-      setDepartments(data);
-    }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
