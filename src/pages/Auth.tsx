@@ -251,7 +251,6 @@ export default function Auth() {
         email: signupEmail,
         password: signupPassword,
         confirmPassword: signupConfirmPassword,
-        departmentId: signupDepartmentId,
         regionId: signupRegionId,
         districtId: signupDistrictId,
         serviceType: signupServiceType,
@@ -275,7 +274,7 @@ export default function Auth() {
       signupEmail,
       signupPassword,
       signupFullName,
-      signupDepartmentId,
+      undefined,
       {
         regionId: signupRegionId,
         districtId: signupDistrictId,
@@ -289,7 +288,6 @@ export default function Auth() {
       setSignupEmail('');
       setSignupPassword('');
       setSignupConfirmPassword('');
-      setSignupDepartmentId('');
       setSignupRegionId('');
       setSignupDistrictId('');
       setSignupHealthServiceId('');
