@@ -27,7 +27,6 @@ import { Loader2, Mail, Lock, User, Building2, Eye, EyeOff, CheckCircle2, AlertC
 import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { z } from 'zod';
 import logo from '@/assets/logo-pai-circular.png';
-import { Department } from '@/types/database';
 
 const loginSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
@@ -44,7 +43,6 @@ const signupSchema = z.object({
     .regex(/[0-9]/, 'Debe contener al menos un número')
     .regex(/[^A-Za-z0-9]/, 'Debe contener al menos un carácter especial'),
   confirmPassword: z.string(),
-  departmentId: z.string().optional(),
   regionId: z.string().min(1, 'Selecciona una región/departamento'),
   districtId: z.string().min(1, 'Selecciona un distrito/municipio'),
   serviceType: z.enum(['public', 'private']),
@@ -63,7 +61,6 @@ export default function Auth() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [healthServices, setHealthServices] = useState<HealthService[]>([]);
@@ -80,7 +77,6 @@ export default function Auth() {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
-  const [signupDepartmentId, setSignupDepartmentId] = useState('');
   const [signupRegionId, setSignupRegionId] = useState('');
   const [signupDistrictId, setSignupDistrictId] = useState('');
   const [signupServiceType, setSignupServiceType] = useState<'public' | 'private'>('public');
@@ -94,7 +90,6 @@ export default function Auth() {
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
-    fetchDepartments();
     fetchRegions();
   }, []);
 
@@ -138,18 +133,6 @@ export default function Auth() {
   const fetchRegions = async () => {
     const { data } = await supabase.from('regions').select('id, name').order('name');
     if (data) setRegions(data);
-  };
-
-
-  const fetchDepartments = async () => {
-    const { data, error } = await supabase
-      .from('departments')
-      .select('*')
-      .order('name');
-
-    if (!error && data) {
-      setDepartments(data);
-    }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -268,7 +251,6 @@ export default function Auth() {
         email: signupEmail,
         password: signupPassword,
         confirmPassword: signupConfirmPassword,
-        departmentId: signupDepartmentId,
         regionId: signupRegionId,
         districtId: signupDistrictId,
         serviceType: signupServiceType,
@@ -292,7 +274,7 @@ export default function Auth() {
       signupEmail,
       signupPassword,
       signupFullName,
-      signupDepartmentId,
+      undefined,
       {
         regionId: signupRegionId,
         districtId: signupDistrictId,
@@ -306,7 +288,6 @@ export default function Auth() {
       setSignupEmail('');
       setSignupPassword('');
       setSignupConfirmPassword('');
-      setSignupDepartmentId('');
       setSignupRegionId('');
       setSignupDistrictId('');
       setSignupHealthServiceId('');
@@ -554,27 +535,6 @@ export default function Auth() {
                       </p>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-department">Departamento</Label>
-                    <Select value={signupDepartmentId} onValueChange={setSignupDepartmentId}>
-                      <SelectTrigger className={errors.departmentId ? 'border-destructive' : ''}>
-                        <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                        <SelectValue placeholder="Selecciona tu departamento" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departments.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.id}>
-                            {dept.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.departmentId && (
-                      <p className="text-xs text-destructive">{errors.departmentId}</p>
-                    )}
-                  </div>
-
-                  {/* Región / Departamento sanitario */}
                   <div className="space-y-2">
                     <Label htmlFor="signup-region">Región / Departamento <span className="text-destructive">*</span></Label>
                     <Select value={signupRegionId} onValueChange={setSignupRegionId}>
