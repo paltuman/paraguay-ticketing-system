@@ -27,7 +27,6 @@ import { Loader2, Mail, Lock, User, Building2, Eye, EyeOff, CheckCircle2, AlertC
 import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 import { z } from 'zod';
 import logo from '@/assets/logo-pai-circular.png';
-import { Department } from '@/types/database';
 
 const loginSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
