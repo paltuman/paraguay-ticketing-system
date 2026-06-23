@@ -14,7 +14,7 @@
 
 @layer base {
   :root {
-    /* Colores principales de Paraguay */
+    /* Colores de la bandera paraguaya */
     --background: 210 40% 98%;
     --foreground: 215 35% 15%;
 
@@ -24,8 +24,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 35% 15%;
 
-    /* Azul institucional */
-    --primary: 211 84% 45%;
+    /* Azul de la bandera paraguaya (#0038A8) */
+    --primary: 218 100% 33%;
     --primary-foreground: 0 0% 100%;
 
     /* Azul marino */
