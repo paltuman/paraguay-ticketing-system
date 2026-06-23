@@ -536,27 +536,6 @@ export default function Auth() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-department">Departamento</Label>
-                    <Select value={signupDepartmentId} onValueChange={setSignupDepartmentId}>
-                      <SelectTrigger className={errors.departmentId ? 'border-destructive' : ''}>
-                        <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                        <SelectValue placeholder="Selecciona tu departamento" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departments.map((dept) => (
-                          <SelectItem key={dept.id} value={dept.id}>
-                            {dept.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.departmentId && (
-                      <p className="text-xs text-destructive">{errors.departmentId}</p>
-                    )}
-                  </div>
-
-                  {/* Región / Departamento sanitario */}
-                  <div className="space-y-2">
                     <Label htmlFor="signup-region">Región / Departamento <span className="text-destructive">*</span></Label>
                     <Select value={signupRegionId} onValueChange={setSignupRegionId}>
                       <SelectTrigger className={errors.regionId ? 'border-destructive' : ''}>
