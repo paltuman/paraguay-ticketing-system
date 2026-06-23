@@ -78,7 +78,6 @@ export default function Auth() {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
-  const [signupDepartmentId, setSignupDepartmentId] = useState('');
   const [signupRegionId, setSignupRegionId] = useState('');
   const [signupDistrictId, setSignupDistrictId] = useState('');
   const [signupServiceType, setSignupServiceType] = useState<'public' | 'private'>('public');
