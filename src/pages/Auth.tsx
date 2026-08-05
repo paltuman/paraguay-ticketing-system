@@ -298,28 +298,32 @@ export default function Auth() {
   return (
     <div className="flex min-h-screen">
       {/* Left Side - Hero */}
-      <div className="hidden lg:flex lg:w-1/2 gradient-hero flex-col items-center justify-center p-12 text-white relative overflow-hidden">
-        {/* Static flag-inspired glow */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div className="absolute top-16 left-16 w-72 h-72 rounded-full bg-white/30 blur-3xl" />
-          <div className="absolute bottom-16 right-16 w-56 h-56 rounded-full bg-white/20 blur-3xl" />
+      <div className="hidden lg:flex lg:w-1/2 gradient-hero flex-col justify-center px-16 py-12 text-primary-foreground relative overflow-hidden">
+        <div className="relative z-10 max-w-md animate-fade-in">
+          <img
+            src={logo}
+            alt="Programa Ampliado de Inmunizaciones"
+            className="mb-10 h-24 w-24 rounded-full bg-white object-contain p-1"
+          />
+          <h1 className="text-4xl font-semibold leading-tight tracking-tight">
+            Programa Ampliado de Inmunizaciones
+          </h1>
+          <div className="my-6 h-px w-16 bg-primary-foreground/30" />
+          <p className="text-base leading-relaxed text-primary-foreground/70">
+            Sistema Nacional de Soporte al Usuario DHIS2. Registro, categorización y
+            escalamiento de incidentes en tres niveles de atención.
+          </p>
+
+          <ul className="mt-10 space-y-3 text-sm text-primary-foreground/60">
+            <li>Nivel 1 · Mesa de ayuda básica (Service Desk)</li>
+            <li>Nivel 2 · Soporte técnico especializado</li>
+            <li>Nivel 3 · Soporte avanzado (DHIS2 Core)</li>
+          </ul>
         </div>
-        
-        <div className="relative z-10 flex flex-col items-center animate-fade-in">
-          <div className="mx-auto mb-8 h-56 w-56 rounded-full bg-white/95 p-3 shadow-glow flex items-center justify-center backdrop-blur-sm">
-            <img 
-              src={logo} 
-              alt="Programa Ampliado de Inmunizaciones" 
-              className="h-48 w-48 object-contain rounded-full bg-white" 
-            />
-          </div>
-          <div className="text-center max-w-md bg-black/20 backdrop-blur-md rounded-2xl px-8 py-6 border border-white/10">
-            <h1 className="mb-2 text-3xl font-bold tracking-tight">Programa Ampliado de Inmunizaciones</h1>
-            <p className="text-lg opacity-90">Sistema de Gestión de Tickets</p>
-          </div>
-        </div>
-        <div className="absolute bottom-8 text-center">
-          <p className="text-xs opacity-40">© {new Date().getFullYear()}</p>
+        <div className="absolute bottom-8 left-16">
+          <p className="text-xs text-primary-foreground/40">
+            Subsistema de Información · © {new Date().getFullYear()}
+          </p>
         </div>
       </div>
 

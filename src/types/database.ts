@@ -99,11 +99,18 @@ export interface CommonIssue {
   department_id: string | null;
   keywords: string[];
   usage_count: number;
+  support_level?: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   department?: Department | null;
 }
+
+export const supportLevelLabels: Record<number, string> = {
+  1: 'Nivel 1 · Mesa de ayuda',
+  2: 'Nivel 2 · Especializado',
+  3: 'Nivel 3 · Avanzado (Core)',
+};
 
 export const statusLabels: Record<TicketStatus, string> = {
   open: 'Abierto',
