@@ -81,7 +81,7 @@
     /* Gradientes institucionales */
     --gradient-primary: linear-gradient(135deg, hsl(218 100% 33%) 0%, hsl(215 50% 23%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(205 85% 92%) 0%, hsl(210 30% 94%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(218 100% 33%) 0%, hsl(218 100% 33%) 34%, hsl(0 0% 100%) 34%, hsl(0 0% 100%) 66%, hsl(350 85% 43%) 66%, hsl(350 85% 43%) 100%);
+    --gradient-hero: linear-gradient(160deg, hsl(215 55% 18%) 0%, hsl(218 90% 27%) 55%, hsl(211 84% 38%) 100%);
     --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
     --gradient-mesh: radial-gradient(at 40% 20%, hsl(218 100% 33% / 0.15) 0px, transparent 50%),
                      radial-gradient(at 80% 0%, hsl(0 0% 100% / 0.2) 0px, transparent 50%),
