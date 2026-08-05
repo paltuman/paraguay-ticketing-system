@@ -58,6 +58,7 @@ export type Database = {
           id: string
           is_active: boolean
           keywords: string[] | null
+          support_level: number
           title: string
           updated_at: string
           usage_count: number
@@ -69,6 +70,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           keywords?: string[] | null
+          support_level?: number
           title: string
           updated_at?: string
           usage_count?: number
@@ -80,6 +82,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           keywords?: string[] | null
+          support_level?: number
           title?: string
           updated_at?: string
           usage_count?: number
@@ -556,6 +559,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           closed_at: string | null
+          common_issue_id: string | null
           created_at: string
           created_by: string | null
           department_id: string | null
@@ -572,6 +576,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           closed_at?: string | null
+          common_issue_id?: string | null
           created_at?: string
           created_by?: string | null
           department_id?: string | null
@@ -588,6 +593,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           closed_at?: string | null
+          common_issue_id?: string | null
           created_at?: string
           created_by?: string | null
           department_id?: string | null
@@ -615,6 +621,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_performance_stats"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "tickets_common_issue_id_fkey"
+            columns: ["common_issue_id"]
+            isOneToOne: false
+            referencedRelation: "common_issues"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tickets_created_by_fkey"
