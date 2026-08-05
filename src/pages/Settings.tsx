@@ -101,6 +101,7 @@ export default function Settings() {
   const [issueDescription, setIssueDescription] = useState('');
   const [issueDepartmentId, setIssueDepartmentId] = useState('all');
   const [issueKeywords, setIssueKeywords] = useState('');
+  const [issueLevel, setIssueLevel] = useState('1');
   const [issueActive, setIssueActive] = useState(true);
   const [issueSubmitting, setIssueSubmitting] = useState(false);
 
@@ -297,6 +298,7 @@ export default function Settings() {
       setIssueDescription(issue.description || '');
       setIssueDepartmentId(issue.department_id || 'all');
       setIssueKeywords(issue.keywords?.join(', ') || '');
+      setIssueLevel(String(issue.support_level ?? 1));
       setIssueActive(issue.is_active);
     } else {
       setEditingIssue(null);
@@ -304,6 +306,7 @@ export default function Settings() {
       setIssueDescription('');
       setIssueDepartmentId('all');
       setIssueKeywords('');
+      setIssueLevel('1');
       setIssueActive(true);
     }
     setIssueDialogOpen(true);
@@ -323,6 +326,7 @@ export default function Settings() {
       description: issueDescription || null,
       department_id: issueDepartmentId === 'all' ? null : issueDepartmentId,
       keywords: keywordsArray,
+      support_level: Number(issueLevel),
       is_active: issueActive,
     };
 
@@ -638,6 +642,19 @@ export default function Settings() {
                         onChange={(e) => setIssueKeywords(e.target.value)}
                         placeholder="Ej: login, acceso, contraseña"
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="issue-level">Nivel de soporte (escalamiento)</Label>
+                      <Select value={issueLevel} onValueChange={setIssueLevel}>
+                        <SelectTrigger id="issue-level">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Nivel 1 · Mesa de ayuda básica</SelectItem>
+                          <SelectItem value="2">Nivel 2 · Soporte especializado</SelectItem>
+                          <SelectItem value="3">Nivel 3 · Soporte avanzado (DHIS2 Core)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="flex items-center justify-between">
                       <Label htmlFor="issue-active">Activo</Label>
