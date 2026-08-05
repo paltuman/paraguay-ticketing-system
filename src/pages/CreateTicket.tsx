@@ -217,6 +217,7 @@ export default function CreateTicket() {
         department_id: departmentId,
         priority,
         created_by: user?.id,
+        common_issue_id: selectedIssueId,
         status: 'open',
       })
       .select()
@@ -308,7 +309,8 @@ export default function CreateTicket() {
               Problemas Frecuentes
             </CardTitle>
             <CardDescription className="text-xs">
-              Selecciona si tu problema coincide con alguno de estos
+              Selecciona si tu problema coincide con alguno de estos. El nivel de atención
+              (N1, N2 o N3) se asigna automáticamente según el POE.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -317,10 +319,13 @@ export default function CreateTicket() {
                 <Badge
                   key={issue.id}
                   variant={selectedIssueId === issue.id ? 'default' : 'outline'}
-                  className="cursor-pointer hover:bg-primary/10"
+                  className="cursor-pointer hover:bg-primary/10 gap-1.5"
                   onClick={() => selectCommonIssue(issue)}
                 >
                   {issue.title}
+                  <span className="text-[10px] opacity-70">
+                    N{issue.support_level ?? 1}
+                  </span>
                 </Badge>
               ))}
             </div>
